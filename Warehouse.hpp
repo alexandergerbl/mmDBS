@@ -4,6 +4,7 @@
 #include "Types.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 struct Warehouse_Entry
 {
@@ -21,7 +22,7 @@ struct Warehouse_Entry
 class Warehouse
 {
   std::vector<Warehouse_Entry> entries;
-  
+public:
   Warehouse(std::string path); 
 };
 
