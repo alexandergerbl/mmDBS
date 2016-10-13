@@ -64,6 +64,7 @@ Warehouse::Warehouse(std::string path)
     w_ytd = Numeric<12,2>::castString (att_value.c_str(), att_value.length());
     
     
+    entries.push_back(Warehouse_Entry{w_id, w_name, w_street_1, w_street_2, w_city, w_state, w_zip, w_tax, w_ytd});
     //for(int i = 0; i < 9; i++)
     {
       
