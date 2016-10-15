@@ -12,6 +12,9 @@ public:
   Row_OrderLine(std::string line) : Row<Integer, Integer, Integer, Integer, Integer, Integer, Date, Numeric<2, 0>, Numeric<6, 2>, Char<24>>(line)
   {}
   
+  Row_OrderLine(Integer ol_o_id, Integer ol_d_id, Integer ol_w_id, Integer ol_number, Integer ol_i_id, Integer ol_supply_w_id, Date g, Numeric<2, 0> h, Numeric<6, 2> i, Char<24> j) : Row(std::move(ol_o_id), std::move(ol_d_id), std::move(ol_w_id), std::move(ol_number), std::move(ol_i_id), std::move(ol_supply_w_id), std::move(g), std::move(h), std::move(i), std::move(j))
+  {}
+  
   inline Integer& ol_o_id()
   {
     return std::get<0>(this->data);     
@@ -74,6 +77,8 @@ public:
   OrderLine(std::string file);
   
   Row_OrderLine& getByPrimaryKey(std::tuple<Integer, Integer, Integer, Integer> const& primaryKey);
+  
+  void insert(Integer ol_o_id, Integer ol_d_id, Integer ol_w_id, Integer ol_number, Integer ol_i_id, Integer ol_supply_w_id, Date ol_delivery_d, Numeric<2, 0> ol_quantity, Numeric<6, 2> ol_amount, Char<24> ol_dist_info);
 };
   
 

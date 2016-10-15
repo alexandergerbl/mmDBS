@@ -12,6 +12,9 @@ public:
   Row_Stock(std::string line) : Row<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>(line)
   {}
   
+  Row_Stock(Integer s_i_id, Integer s_w_id, Numeric<4,0> s_quantity, Char<24> s_dist_01, Char<24> s_dist_02, Char<24> s_dist_03, Char<24> s_dist_04, Char<24> s_dist_05, Char<24> s_dist_06, Char<24> s_dist_07, Char<24> s_dist_08, Char<24> s_dist_09, Char<24> s_dist_10, Numeric<8, 0> s_ytd, Numeric<4, 0> s_order_cnt, Numeric<4, 0> s_remote_cnt, Varchar<50> s_data) : Row(std::move(s_i_id), std::move(s_w_id), std::move(s_quantity), std::move(s_dist_01), std::move(s_dist_02), std::move(s_dist_03), std::move(s_dist_04), std::move(s_dist_05), std::move(s_dist_06), std::move(s_dist_07), std::move(s_dist_08), std::move(s_dist_09), std::move(s_dist_10), std::move(s_ytd),  std::move(s_order_cnt), std::move(s_remote_cnt), std::move(s_data))
+  {}
+  
   inline Integer& s_i_id()
   {
     return std::get<0>(this->data);     
@@ -100,6 +103,8 @@ public:
   Stock(std::string file);
   
   Row_Stock& getByPrimaryKey(std::pair<Integer, Integer> const& primaryKey);
+  
+  void insert(Integer s_i_id, Integer s_w_id, Numeric<4,0> s_quantity, Char<24> s_dist_01, Char<24> s_dist_02, Char<24> s_dist_03, Char<24> s_dist_04, Char<24> s_dist_05, Char<24> s_dist_06, Char<24> s_dist_07, Char<24> s_dist_08, Char<24> s_dist_09, Char<24> s_dist_10, Numeric<8, 0> s_ytd,  Numeric<4, 0> s_order_cnt, Numeric<4, 0> s_remote_cnt, Varchar<50> s_data);
 };
 
 

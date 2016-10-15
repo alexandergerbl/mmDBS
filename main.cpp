@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <chrono>
 
 #include "Customer.hpp"
 #include "District.hpp"
@@ -32,7 +33,7 @@ public:
   
   //Transactions
   
-  void newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp now)
+  void newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp datetime)
   {
     auto w_tax = this->w.w_id(w_id).w_tax();
     auto c_discount = this->c.getByPrimaryKey(std::make_tuple(w_id, d_id, c_id)).c_discount();
@@ -47,13 +48,85 @@ public:
     for(int32_t index = 0; index < items; index++)
     {
       if(w_id != supware[index])
-	all_local = 0;
+	    all_local = 0;
     }
     //insert data into Order Table
+    o.insert(o_id, d_id, w_id, c_id, Date{datetime.value}, 0, Integer{items}, Integer{all_local});
     
     //insert data into NewOrder Table
+    no.insert(o_id, d_id, w_id);
     
-    
+    for(int32_t index = 0; index < items; index++)
+    {
+      auto i_price = i.getByPrimaryKey(itemid[index]).i_price();
+      
+      Row_Stock& tmp_s = s.getByPrimaryKey(std::make_pair(supware[index], itemid[index]));
+      Char<24> s_dist;
+      
+      switch(d_id.value)
+      {
+        case(1):
+              s_dist = tmp_s.s_dist_01();
+              break;
+        case(2):
+              s_dist = tmp_s.s_dist_02();
+              break;
+        case(3):
+              s_dist = tmp_s.s_dist_03();
+              break;
+        case(4):
+              s_dist = tmp_s.s_dist_04();
+              break;
+        case(5):
+              s_dist = tmp_s.s_dist_05();
+              break;
+        case(6):
+              s_dist = tmp_s.s_dist_06();
+              break;
+        case(7):
+              s_dist = tmp_s.s_dist_07();
+              break;
+        case(8):
+              s_dist = tmp_s.s_dist_08();
+              break;
+        case(9):
+              s_dist = tmp_s.s_dist_09();
+              break;
+        case(10):
+              s_dist = tmp_s.s_dist_10();
+              break;
+          default:
+              break;
+      }
+      
+      if(tmp_s.s_quantity() > qty[index])
+      {
+          tmp_s.s_quantity() = tmp_s.s_quantity() - qty[index];
+      }
+      else
+      {
+          tmp_s.s_quantity() = tmp_s.s_quantity() + 91 - qty[index];
+          
+          if(supware[index] != w_id.value)
+          {
+              tmp_s.s_remote_cnt() = tmp_s.s_remote_cnt() + 1;
+          }else
+          {
+              tmp_s.s_remote_cnt() = tmp_s.s_order_cnt() + 1;
+          }
+          
+          //insert into orderline
+          Numeric<6, 2> a{qty[index]*100};
+          Numeric<6, 2> b{i_price.value};
+          Numeric<6, 2> c{(10000+w_tax.value+d_tax.value)/100};
+          Numeric<6, 2> d{(10000-c_discount.value)/100};
+          auto ol_amount = (((a.value*b.value)/100)*((c.value*d.value)/100)) / 100;
+
+          //
+          ol.insert(o_id, d_id, w_id, Integer{index+1}, Integer{itemid[index]}, Integer{supware[index]}, Date{0}, Numeric<2, 0>(qty[index]), ol_amount, s_dist);
+      }
+      
+    }    
     
   }
 
@@ -104,26 +177,21 @@ int main()
 {
   std::cout << "Main Memory Database System\n" << std::endl;
 
-  //USAGE
-  Customer c{"./task1/tpcc_customer.tbl"};
-  District d{"./task1/tpcc_district.tbl"};
-  History h{"./task1/tpcc_history.tbl"};
-  Item i{"./task1/tpcc_item.tbl"};
-  NewOrder no{"./task1/tpcc_neworder.tbl"};
-  Order o{"./task1/tpcc_order.tbl"};
-  OrderLine ol{"./task1/tpcc_orderline.tbl"};
-  Stock s{"./task1/tpcc_stock.tbl"};
-  Warehouse w{"./task1/tpcc_warehouse.tbl"};
+  TpccDatabase db;
   
-  std::cout << "Customer has " << c.rows.size() << " rows!" << std::endl;
-  std::cout << "District has " << d.rows.size() << " rows!" << std::endl;
-  std::cout << "History has " << h.rows.size() << " rows!" << std::endl;
-  std::cout << "Item has " << i.rows.size() << " rows!" << std::endl;
-  std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
-  std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
-  std::cout << "Orderline has " << ol.rows.size() << " rows!" << std::endl;
-  std::cout << "Stock has " << s.rows.size() << " rows!" << std::endl;
-  std::cout << "Warhouse has " << w.rows.size() << " rows!" << std::endl;
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  start = std::chrono::system_clock::now();
+  
+  for(auto i = 0; i < 1000000; i++)
+  {
+      db.newOrderRandom(Timestamp{static_cast<uint64_t>( 40+i)}, i%5);
+  }
+  end = std::chrono::system_clock::now();
+
+  std::cout << 1000000/ std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " newOrderRandom/s" << std::endl;
+  
+
+  
   
   return 0;
 }

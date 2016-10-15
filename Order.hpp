@@ -12,7 +12,7 @@ public:
   Row_Order(std::string line) : Row<Integer, Integer, Integer, Integer, Date, Integer, Numeric<2, 0>, Numeric<1, 0>>(line)
   {}
   
-  Row_Order(Integer o_id, Integer o_d_id, Integer o_w_id, Integer o_c_id, Date o_entry_d, Integer o_carrier_id, Numeric<2, 0> o_ol_cnt, Numeric<1, 0> o_all_local) : Row<Integer, Integer, Integer, Integer, Date, Integer, Numeric<2, 0>, Numeric<1, 0>> (o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local)
+  Row_Order(Integer o_id, Integer o_d_id, Integer o_w_id, Integer o_c_id, Date o_entry_d, Integer o_carrier_id, Numeric<2, 0> o_ol_cnt, Numeric<1, 0> o_all_local) : Row (std::move(o_id), std::move(o_d_id), std::move(o_w_id), std::move(o_c_id), std::move(o_entry_d), std::move(o_carrier_id), std::move(o_ol_cnt), std::move(o_all_local))
   {
   }
   
@@ -69,7 +69,7 @@ public:
   
   Row_Order& getByPrimaryKey(std::tuple<Integer, Integer, Integer> const& primaryKey);
   
-  void addRow(Integer o_id, Integer o_d_id, Integer o_w_id, Integer o_c_id, Date o_entry_d, Integer o_carrier_id, Numeric<2, 0> o_ol_cnt, Numeric<1, 0> o_all_local);
+  void insert(Integer o_id, Integer o_d_id, Integer o_w_id, Integer o_c_id, Date o_entry_d, Integer o_carrier_id, Numeric<2, 0> o_ol_cnt, Numeric<1, 0> o_all_local);
 };
   
 #endif

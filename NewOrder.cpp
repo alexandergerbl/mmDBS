@@ -21,3 +21,8 @@ NewOrder::NewOrder(std::string file)
   }
   
 }
+
+void NewOrder::insert(Integer no_o_id, Integer no_d_id, Integer no_w_id)
+{
+  this->rows.emplace_back(no_o_id, no_d_id, no_w_id);
+}
