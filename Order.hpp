@@ -1,6 +1,9 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
+#include <map>
+#include <tuple>
+
 #include "Row.hpp"
 
 class Row_Order : public Row<Integer, Integer, Integer, Integer, Date, Integer, Numeric<2, 0>, Numeric<1, 0>>
@@ -53,10 +56,13 @@ public:
 
 class Order 
 {
+  std::map<std::tuple<Integer, Integer, Integer>, Tid> primaryKeys;
 public:
   std::vector<Row_Order> rows;
   
   Order(std::string file);
+  
+  Row_Order& getByPrimaryKey(std::tuple<Integer, Integer, Integer> const& primaryKey);
 };
   
 #endif

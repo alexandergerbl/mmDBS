@@ -1,6 +1,9 @@
 #ifndef ORDERLINE_HPP
 #define ORDERLINE_HPP
 
+#include <map>
+#include <tuple>
+
 #include "Row.hpp"
 
 class Row_OrderLine : public Row<Integer, Integer, Integer, Integer, Integer, Integer, Date, Numeric<2, 0>, Numeric<6, 2>, Char<24>>
@@ -64,10 +67,13 @@ public:
 
 class OrderLine 
 {
+  std::map<std::tuple<Integer, Integer, Integer, Integer>, Tid> primaryKeys;
 public:
   std::vector<Row_OrderLine> rows;
   
   OrderLine(std::string file);
+  
+  Row_OrderLine& getByPrimaryKey(std::tuple<Integer, Integer, Integer, Integer> const& primaryKey);
 };
   
 

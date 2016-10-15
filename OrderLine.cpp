@@ -17,7 +17,14 @@ OrderLine::OrderLine(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_OrderLine(line)); 
+    this->rows.emplace_back<Row_OrderLine>(line); 
+    auto tid = this->rows.size() - 1;
+    this->primaryKeys[std::make_tuple(this->rows[tid].ol_w_id(), this->rows[tid].ol_d_id(), this->rows[tid].ol_o_id(), this->rows[tid].ol_number())] = tid;
   }
   
+}
+
+Row_OrderLine& OrderLine::getByPrimaryKey(std::tuple<Integer, Integer, Integer, Integer> const& primaryKey)
+{
+  return this->rows[this->primaryKeys[primaryKey]]; 
 }

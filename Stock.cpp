@@ -17,7 +17,14 @@ Stock::Stock(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_Stock(line)); 
+    this->rows.emplace_back<Row_Stock>(line); 
+    auto tid = this->rows.size() - 1;
+    this->primaryKeys[std::make_pair(this->rows[tid].s_w_id(), this->rows[tid].s_i_id())] = tid;
   }
   
+}
+
+Row_Stock& Stock::getByPrimaryKey(std::pair<Integer, Integer> const& primaryKey)
+{
+  return this->rows[this->primaryKeys[primaryKey]];
 }

@@ -17,8 +17,15 @@ Warehouse::Warehouse(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_Warehouse(line)); 
+    this->rows.emplace_back<Row_Warehouse>(line); 
+    auto w_id = this->rows[this->rows.size()-1].w_id();
+    this->primaryKey[w_id] = this->rows.size()-1;
   }
-  
-  
+   
+}
+
+
+Row_Warehouse& Warehouse::w_id(Integer const& w_id)
+{
+  return this->rows[this->primaryKey[w_id]];
 }

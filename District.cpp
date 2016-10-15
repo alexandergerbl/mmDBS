@@ -17,7 +17,13 @@ District::District(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_District(line)); 
+    this->rows.emplace_back<Row_District>(line);
+    this->primaryKey[std::make_pair(this->rows[this->rows.size()-1].d_w_id(), this->rows[this->rows.size()-1].d_id())] = this->rows.size() - 1;
   }
   
+}
+
+Row_District& District::getByPrimaryKey(std::pair<Integer, Integer> const& p_key)
+{
+  return this->rows[this->primaryKey[p_key]];
 }

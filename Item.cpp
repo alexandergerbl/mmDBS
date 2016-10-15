@@ -17,7 +17,14 @@ Item::Item(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_Item(line)); 
+    this->rows.emplace_back<Row_Item>(line); 
+    auto tid = this->rows.size() - 1;
+    this->primaryKeys[this->rows[tid].i_id()] = tid;
   }
   
+}
+
+Row_Item& Item::getByPrimaryKey(Integer const& primaryKey)
+{
+  return this->rows[this->primaryKeys[primaryKey]];
 }

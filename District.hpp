@@ -2,6 +2,8 @@
 #define DISTRICT_HPP
 
 #include "Row.hpp"
+#include <map>
+#include <utility>
 
 class Row_District : public Row<Integer, Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>, Integer>
 {
@@ -67,10 +69,14 @@ public:
 
 class District 
 {
+  // (d_w_id, d_id) -> Tid
+  std::map<std::pair<Integer, Integer>, Tid> primaryKey;
 public:
   std::vector<Row_District> rows;
   
   District(std::string file);
+  
+  Row_District& getByPrimaryKey(std::pair<Integer, Integer> const& p_key);
 };
 
 #endif

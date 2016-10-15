@@ -1,6 +1,9 @@
 #ifndef STOCK_HPP
 #define STOCK_HPP
 
+#include <map>
+#include <utility>
+
 #include "Row.hpp"
 
 class Row_Stock : public Row<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>
@@ -90,10 +93,13 @@ public:
 
 class Stock
 {
+  std::map<std::pair<Integer, Integer>, Tid> primaryKeys;
 public:
   std::vector<Row_Stock> rows;
   
   Stock(std::string file);
+  
+  Row_Stock& getByPrimaryKey(std::pair<Integer, Integer> const& primaryKey);
 };
 
 

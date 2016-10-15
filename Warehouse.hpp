@@ -2,6 +2,7 @@
 #define WAREHOUSE_H
 
 #include <vector>
+#include <map>
 
 #include "Row.hpp"
 #include "Types.hpp"
@@ -63,11 +64,14 @@ public:
 
 class Warehouse
 {
+  std::map<Integer, Tid> primaryKey;
+  
 public:
   std::vector<Row_Warehouse> rows;
   
   Warehouse(std::string file);
   
+  Row_Warehouse& w_id(Integer const& w_id);
 };
 
 #endif

@@ -16,7 +16,14 @@ Customer::Customer(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_Customer(line)); 
+    this->rows.emplace_back<Row_Customer>(line); 
+    auto tid = this->rows.size() -1;
+    this->primaryKeys[std::make_tuple(this->rows[tid].c_w_id(), this->rows[tid].c_d_id(),this->rows[tid].c_id())] = tid;
   }
   
+}
+
+Row_Customer& Customer::getByPrimaryKey(std::tuple<Integer, Integer, Integer> const& primaryKey)
+{
+  return this->rows[this->primaryKeys[primaryKey]];
 }

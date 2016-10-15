@@ -17,7 +17,7 @@ History::History(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_History(line)); 
+    this->rows.emplace_back<Row_History>(line); 
   }
   
 }

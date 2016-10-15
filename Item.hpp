@@ -3,6 +3,8 @@
 
 #include "Row.hpp"
 
+#include <map>
+
 class Row_Item : public Row<Integer, Integer, Varchar<24>, Numeric<5, 2>, Varchar<50>>
 {
 public:
@@ -37,10 +39,13 @@ public:
   
 class Item 
 {
+  std::map<Integer, Tid> primaryKeys;
 public:
   std::vector<Row_Item> rows;
   
   Item(std::string file);
+  
+  Row_Item& getByPrimaryKey(Integer const& primaryKey);
 };
 
 #endif

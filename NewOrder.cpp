@@ -17,7 +17,7 @@ NewOrder::NewOrder(std::string file)
   
   while(std::getline(in, line))
   {
-    this->rows.push_back(Row_NewOrder(line)); 
+    this->rows.emplace_back<Row_NewOrder>(line); 
   }
   
 }
