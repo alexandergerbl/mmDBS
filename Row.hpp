@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
+#include <cstdint>
 
 
 template<typename T>
@@ -25,11 +26,19 @@ inline auto readAttribute<Integer>(std::string att_value)
 {
   return Integer::castString(att_value.c_str(), att_value.length());
 }
-
+/*
 template<>
 inline auto readAttribute<Date>(std::string att_value)
 {
   return Date::castString(att_value.c_str(), att_value.length());
+}
+*/
+
+template<>
+inline auto readAttribute<Date>(std::string att_value)
+{
+  uint32_t date = atoi(att_value.c_str());
+  return Date(date);
 }
 
 template<>
