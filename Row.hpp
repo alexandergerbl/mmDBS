@@ -156,6 +156,11 @@ struct Row {
     Row(std::string const& r) : ss{r} {
         readRow<0, Types...>();
     }
+    
+    Row(Types&&... types)
+    { 
+      this->data = std::make_tuple(std::forward<Types>(types)...);
+    }
  
     template <int I>
     auto readRow() {
