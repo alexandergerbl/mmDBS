@@ -51,7 +51,7 @@ public:
 	    all_local = 0;
     }
     //insert data into Order Table
-    o.insert(o_id, d_id, w_id, c_id, Date{datetime.value}, 0, Integer{items}, Integer{all_local});
+    o.insert(o_id, d_id, w_id, c_id, Date{(int32_t) datetime.value}, 0, Integer{items}, Integer{all_local});
     
     //insert data into NewOrder Table
     no.insert(o_id, d_id, w_id);

@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstdint>
 
+#include <iostream>
 
 template<typename T>
 inline auto readAttribute(std::string att_value)
@@ -151,9 +152,16 @@ inline auto readAttribute<Numeric<12, 2>>(std::string att_value)
 template <typename... Types>
 struct Row {
     std::tuple<Types...> data;
-    std::stringstream ss;
  
-    Row(std::string const& r) : ss{r} {
+    char* token;
+    
+    Row(std::string const& r) {
+        char s [r.length()];
+        
+        strcpy(s, r.c_str());
+        
+        token = std::strtok(s, "|");        
+        
         readRow<0, Types...>();
     }
     
@@ -171,10 +179,9 @@ struct Row {
     auto readRow() {
         static_assert(I + 1 + sizeof...(Args) == sizeof...(Types), "Index Error!\n");
  
-        std::string att_value;
-        std::getline(ss, att_value, '|');
- 
-        std::get<I>(data) = readAttribute<Arg>(att_value);
+        std::get<I>(data) = readAttribute<Arg>(token);
+        
+        token = std::strtok(NULL, "|");
  
         readRow<I + 1, Args...>();
     }
