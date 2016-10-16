@@ -33,6 +33,19 @@ public:
   
   //Transactions
   
+  void printInfo()
+  {
+      std::cout << "Customer has " << c.rows.size() << " rows!" << std::endl;
+      std::cout << "District has " << d.rows.size() << " rows!" << std::endl;
+      std::cout << "History has " << h.rows.size() << " rows!" << std::endl;
+      std::cout << "Item has " << i.rows.size() << " rows!" << std::endl;
+      std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
+      std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
+      std::cout << "OrderLine has " << ol.rows.size() << " rows!" << std::endl;
+      std::cout << "Stock has " << s.rows.size() << " rows!" << std::endl;
+      std::cout << "Warehouse has " << w.rows.size() << " rows!" << std::endl;
+  }
+  
   void newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp datetime)
   {
     auto w_tax = this->w.w_id(w_id).w_tax();
@@ -191,7 +204,7 @@ int main()
   std::cout << 1000000/ std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " newOrderRandom/s" << std::endl;
   
 
-  
+  db.printInfo();
   
   return 0;
 }
