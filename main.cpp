@@ -195,13 +195,13 @@ int main()
   std::chrono::time_point<std::chrono::system_clock> start, end;
   start = std::chrono::system_clock::now();
   
-  for(auto i = 0; i < 1000000; i++)
+  for(auto i = 0; i < 1000; i++)
   {
       db.newOrderRandom(Timestamp{static_cast<uint64_t>( 40+i)}, i%5);
   }
   end = std::chrono::system_clock::now();
 
-  std::cout << 1000000/ std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " newOrderRandom/s" << std::endl;
+  std::cout << 1000/ std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " newOrderRandom/s" << std::endl;
   
 
   db.printInfo();
