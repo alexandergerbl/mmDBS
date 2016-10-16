@@ -2,7 +2,7 @@
 #define WAREHOUSE_H
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 #include "Row.hpp"
 #include "Types.hpp"
@@ -61,10 +61,17 @@ public:
   
 };
 
+struct IntegerHash
+{
+    std::size_t operator()(Integer const& i) const
+    {
+        return i.hash();
+    }
+};
 
 class Warehouse
 {
-  std::map<Integer, Tid> primaryKey;
+  std::unordered_map<Integer, Tid, IntegerHash> primaryKey;
   
 public:
   std::vector<Row_Warehouse> rows;

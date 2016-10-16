@@ -1,7 +1,7 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 #include "Row.hpp"
@@ -59,9 +59,17 @@ public:
     
 };
 
+struct IntIntIntHash
+{
+  std::size_t operator()(std::tuple<Integer, Integer, Integer> const& p) const 
+  {
+      return (std::get<0>(p).hash() ^ std::get<1>(p).hash()) ^ std::get<2>(p).hash();
+  }
+};
+
 class Order 
 {
-  std::map<std::tuple<Integer, Integer, Integer>, Tid> primaryKeys;
+  std::unordered_map<std::tuple<Integer, Integer, Integer>, Tid, IntIntIntHash> primaryKeys;
 public:
   std::vector<Row_Order> rows;
   

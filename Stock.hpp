@@ -1,7 +1,7 @@
 #ifndef STOCK_HPP
 #define STOCK_HPP
 
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 #include "Row.hpp"
@@ -94,9 +94,17 @@ public:
   
 };
 
+struct IntIntHash
+{
+    std::size_t operator()(std::pair<Integer, Integer> const& p) const
+    {
+        return p.first.hash() ^ p.second.hash();
+    }
+};
+
 class Stock
 {
-  std::map<std::pair<Integer, Integer>, Tid> primaryKeys;
+  std::unordered_map<std::pair<Integer, Integer>, Tid, IntIntHash> primaryKeys;
 public:
   std::vector<Row_Stock> rows;
   

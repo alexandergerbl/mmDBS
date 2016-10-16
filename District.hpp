@@ -2,7 +2,7 @@
 #define DISTRICT_HPP
 
 #include "Row.hpp"
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 class Row_District : public Row<Integer, Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>, Integer>
@@ -67,10 +67,18 @@ public:
   }  
 };
 
+struct DistrictHash
+{
+   std::size_t operator()(std::pair<Integer, Integer> const& p) const
+   {
+       return p.first.hash() ^ p.second.hash();
+   }
+};
+
 class District 
 {
   // (d_w_id, d_id) -> Tid
-  std::map<std::pair<Integer, Integer>, Tid> primaryKey;
+  std::unordered_map<std::pair<Integer, Integer>, Tid, DistrictHash> primaryKey;
 public:
   std::vector<Row_District> rows;
   

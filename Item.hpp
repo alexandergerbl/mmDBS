@@ -3,7 +3,7 @@
 
 #include "Row.hpp"
 
-#include <map>
+#include <unordered_map>
 
 class Row_Item : public Row<Integer, Integer, Varchar<24>, Numeric<5, 2>, Varchar<50>>
 {
@@ -37,9 +37,17 @@ public:
   }
 };
   
+struct IntHash
+{
+   std::size_t operator()(Integer const& i) const
+   {
+       return i.hash();
+   }
+};
+
 class Item 
 {
-  std::map<Integer, Tid> primaryKeys;
+  std::unordered_map<Integer, Tid, IntHash> primaryKeys;
 public:
   std::vector<Row_Item> rows;
   

@@ -1,7 +1,7 @@
 #ifndef ORDERLINE_HPP
 #define ORDERLINE_HPP
 
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 #include "Row.hpp"
@@ -67,10 +67,18 @@ public:
   }
 };
 
+struct IntIntIntIntHash
+{
+    //TODO XOR of only 2 parameters should also be fine - but check this 
+  std::size_t operator()(std::tuple<Integer, Integer, Integer, Integer> const& p) const
+  {
+     return (std::get<0>(p).hash() ^ std::get<1>(p).hash()) ^ (std::get<2>(p).hash() ^ std::get<3>(p).hash());
+  }
+};
 
 class OrderLine 
 {
-  std::map<std::tuple<Integer, Integer, Integer, Integer>, Tid> primaryKeys;
+  std::unordered_map<std::tuple<Integer, Integer, Integer, Integer>, Tid, IntIntIntIntHash> primaryKeys;
 public:
   std::vector<Row_OrderLine> rows;
   

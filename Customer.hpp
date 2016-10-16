@@ -4,7 +4,7 @@
 #include "Types.hpp"
 #include "Row.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 class Row_Customer : public Row<Integer, Integer, Integer, Varchar<16>, Char<2>, Varchar<16>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Char<16>, Date, Char<2>, Numeric<12,2>, Numeric<4, 4>, Numeric<12,2>, Numeric<12,2>, Numeric<4, 0>, Numeric<4, 0>, Varchar<500>>
@@ -115,9 +115,17 @@ public:
   }
 };
 
+struct CustomerHash
+{
+   std::size_t operator()(std::tuple<Integer, Integer, Integer> const& p) const
+   {
+       return (std::get<0>(p).hash() ^ std::get<1>(p).hash()) ^ std::get<2>(p).hash();
+   }
+};
+
 class Customer 
 {
-  std::map<std::tuple<Integer, Integer, Integer>, Tid> primaryKeys;
+  std::unordered_map<std::tuple<Integer, Integer, Integer>, Tid, CustomerHash> primaryKeys;
 public:
   std::vector<Row_Customer> rows;
   
