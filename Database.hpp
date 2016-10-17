@@ -16,6 +16,7 @@
 
 class Database
 {
+public:
   Customer c{"./task1/tpcc_customer.tbl"};
   District d{"./task1/tpcc_district.tbl"};
   History h{"./task1/tpcc_history.tbl"};
@@ -26,8 +27,6 @@ class Database
   Stock s{"./task1/tpcc_stock.tbl"};
   Warehouse w{"./task1/tpcc_warehouse.tbl"};
   
-  
-public: 
   Database(){};
   
   //Transactions

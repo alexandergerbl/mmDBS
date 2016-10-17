@@ -1,6 +1,7 @@
 #include "Database.hpp"
 
 #include <chrono>
+#include <cmath>
  
   //Transactions
   
@@ -100,14 +101,22 @@ void Database::newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t items,
             {
                 tmp_s.s_remote_cnt() = tmp_s.s_order_cnt() + 1;
             }
-            
-            //insert into orderline
-            Numeric<6, 2> a{qty[index]*100};
-            Numeric<6, 2> b{i_price.value};
-            Numeric<6, 2> c{(10000+w_tax.value+d_tax.value)/100};
-            Numeric<6, 2> d{(10000-c_discount.value)/100};
-            auto ol_amount = (((a.value*b.value)/100)*((c.value*d.value)/100)) / 100;
+             
+            Numeric<4, 0> one{1};
+            Numeric<4, 0> one2{1};
+            Numeric<4, 0> one3{1};
 
+
+            auto a = (Numeric<6, 0>{qty[index]}.castP2() * i_price.castS<6>()).castS<8>();//3457,8
+            auto b = (one2.castP2().castP2() + w_tax + d_tax).castS<8>();//1,2141
+            auto c = ((one.castP2().castP2()  - c_discount)).castS<8>();
+
+            auto tmp_result = (b * c).castM2<8>().castM2<8>() * a;
+            
+            
+            Numeric<6, 2> ol_amount = tmp_result.castM2<8>().castM2<8>().castM2<6>();
+            //due to precision instead of 2001,71 its 2430.14
+            //            std::cout << "a * b * c =  2001,72 = " << ol_amount << std::endl;          
             //
             ol.insert(o_id, d_id, w_id, Integer{index+1}, Integer{itemid[index]}, Integer{supware[index]}, Date{0}, Numeric<2, 0>(qty[index]), ol_amount, s_dist);
         }
