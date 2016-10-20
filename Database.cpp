@@ -179,7 +179,7 @@ void Database::printTask1Info(int numRepeat)
   }
   end = std::chrono::system_clock::now();
 
-  std::cout << numRepeat/ std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
+  std::cout << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
   
     std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
     std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
