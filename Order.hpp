@@ -6,6 +6,8 @@
 
 #include "Row.hpp"
 
+#include "My_Hashes.hpp"
+
 class Row_Order : public Row<Integer, Integer, Integer, Integer, Date, Integer, Numeric<2, 0>, Numeric<1, 0>>
 {
 public:
@@ -59,13 +61,7 @@ public:
     
 };
 
-struct IntIntIntHash
-{
-  std::size_t operator()(std::tuple<Integer, Integer, Integer> const& p) const 
-  {
-      return (std::get<0>(p).hash() ^ std::get<1>(p).hash()) ^ std::get<2>(p).hash();
-  }
-};
+
 
 class Order 
 {

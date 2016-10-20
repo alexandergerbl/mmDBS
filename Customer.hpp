@@ -4,6 +4,8 @@
 #include "Types.hpp"
 #include "Row.hpp"
 
+#include "My_Hashes.hpp"
+
 #include <unordered_map>
 #include <tuple>
 
@@ -115,17 +117,11 @@ public:
   }
 };
 
-struct CustomerHash
-{
-   std::size_t operator()(std::tuple<Integer, Integer, Integer> const& p) const
-   {
-       return (std::get<0>(p).hash() ^ std::get<1>(p).hash()) ^ std::get<2>(p).hash();
-   }
-};
+
 
 class Customer 
 {
-  std::unordered_map<std::tuple<Integer, Integer, Integer>, Tid, CustomerHash> primaryKeys;
+  std::unordered_map<std::tuple<Integer, Integer, Integer>, Tid, IntIntIntHash> primaryKeys;
 public:
   std::vector<Row_Customer> rows;
   

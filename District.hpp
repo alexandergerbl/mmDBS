@@ -2,6 +2,9 @@
 #define DISTRICT_HPP
 
 #include "Row.hpp"
+
+#include "My_Hashes.hpp"
+
 #include <unordered_map>
 #include <utility>
 
@@ -67,18 +70,11 @@ public:
   }  
 };
 
-struct DistrictHash
-{
-   std::size_t operator()(std::pair<Integer, Integer> const& p) const
-   {
-       return p.first.hash() ^ p.second.hash();
-   }
-};
 
 class District 
 {
   // (d_w_id, d_id) -> Tid
-  std::unordered_map<std::pair<Integer, Integer>, Tid, DistrictHash> primaryKey;
+  std::unordered_map<std::pair<Integer, Integer>, Tid, IntIntHash> primaryKey;
 public:
   std::vector<Row_District> rows;
   

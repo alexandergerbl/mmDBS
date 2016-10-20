@@ -6,6 +6,8 @@
 
 #include "Row.hpp"
 
+#include "My_Hashes.hpp"
+
 class Row_Stock : public Row<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>
 {
 public:
@@ -94,13 +96,7 @@ public:
   
 };
 
-struct IntIntHash
-{
-    std::size_t operator()(std::pair<Integer, Integer> const& p) const
-    {
-        return p.first.hash() ^ p.second.hash();
-    }
-};
+
 
 class Stock
 {

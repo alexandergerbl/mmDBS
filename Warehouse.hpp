@@ -7,7 +7,7 @@
 #include "Row.hpp"
 #include "Types.hpp"
 
-
+#include "My_Hashes.hpp"
 
 class Row_Warehouse : public Row<Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>>
 {
@@ -61,17 +61,11 @@ public:
   
 };
 
-struct IntegerHash
-{
-    std::size_t operator()(Integer const& i) const
-    {
-        return i.hash();
-    }
-};
+
 
 class Warehouse
 {
-  std::unordered_map<Integer, Tid, IntegerHash> primaryKey;
+  std::unordered_map<Integer, Tid, IntHash> primaryKey;
   
 public:
   std::vector<Row_Warehouse> rows;

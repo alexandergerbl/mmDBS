@@ -3,6 +3,8 @@
 
 #include "Row.hpp"
 
+#include "My_Hashes.hpp"
+
 #include <unordered_map>
 
 class Row_Item : public Row<Integer, Integer, Varchar<24>, Numeric<5, 2>, Varchar<50>>
@@ -37,13 +39,7 @@ public:
   }
 };
   
-struct IntHash
-{
-   std::size_t operator()(Integer const& i) const
-   {
-       return i.hash();
-   }
-};
+
 
 class Item 
 {
