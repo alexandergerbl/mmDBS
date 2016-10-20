@@ -146,7 +146,7 @@ int32_t Database::nurand(int32_t A,int32_t x,int32_t y) {
 }
 
 void Database::newOrderRandom(Timestamp now,int32_t w_id) {
-    int32_t d_id=urand(1,1);
+    int32_t d_id=urand(1,10);
     int32_t c_id=nurand(1023,1,3000);
     int32_t ol_cnt=urand(5,15);
 
