@@ -14,7 +14,18 @@ class WarehouseColumn : ColumnStore<1, Integer, Varchar<10>, Varchar<20>, Varcha
 {
 public:
        
-    WarehouseColumn(std::string file);
+  WarehouseColumn(std::string file) : ColumnStore(file) {}
+  
+  Tid getByPrimaryKey(Integer const& w_id) const
+  {
+    return this->keys[std::make_tuple(w_id)];
+  }
+
+
+  
+  std::size_t size() const{
+    return std::get<0>(data).size();
+  }
   
   inline auto& w_id()
   {
@@ -60,8 +71,6 @@ public:
   {
     return std::get<8>(this->data);     
   }  
-
-  
 };
 
 #endif

@@ -63,7 +63,11 @@ struct PrimaryKeys
 {
   std::unordered_map<Type, Tid, KeyCompare<numKeys, Type>> keys; 
   
-  Integer operator[](Type const&  t)
+  Tid operator[](Type const&  t) const
+  {
+    return keys.at(t);
+  }
+  Tid& operator[](Type const&  t)
   {
     return keys[t];
   }
@@ -114,10 +118,7 @@ struct ColumnStore {
             
             //add primaryKey entry
             auto tid = std::get<0>(data).size() - 1;              
-
-            //auto tmp2 = createPrimaryKey<NumKeys>(tmp);
-            //std::cout << (std::get<0>(tmp2)) << std::endl;
-            keys[std::move(createPrimaryKey<NumKeys>(tmp))] = tid; 
+            keys[createPrimaryKey<NumKeys>(tmp)] = tid; 
             
         }
         

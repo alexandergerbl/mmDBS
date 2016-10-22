@@ -3,6 +3,16 @@
 #include<fstream>
 #include<experimental/filesystem>
 
+Tid StockColumn::getByPrimaryKey(Integer const& s_i_id, Integer const& s_w_id) const
+{
+    //order must be as in the table
+    return keys[std::make_tuple(s_i_id, s_w_id)];
+}
+
+std::size_t StockColumn::size() const
+{
+    return std::get<0>(data).size();
+}
 
 
 /*
