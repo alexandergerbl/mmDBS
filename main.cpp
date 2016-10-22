@@ -7,9 +7,8 @@
 
 #include "Database.hpp"
 
-
-
-
+#include "WarehouseColumn.hpp"
+#include "StockColumn.hpp"
 
 
 
@@ -17,9 +16,12 @@ int main()
 {
   std::cout << "Main Memory Database System\n" << std::endl;
 
+  WarehouseColumn w{"./task1/tpcc_warehouse.tbl"};
+  StockColumn s{"./task1/tpcc_stock.tbl"};
+  
   Database db;
   
-  db.printTask1Info(1000000);
+  db.printTask1Info(1'000'000);
   
   Integer w_id = 4;
     Integer d_id = 1;

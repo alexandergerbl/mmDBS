@@ -513,4 +513,154 @@ template<typename T, typename... Args> inline uint64_t hashKey(T first,Args... a
    return first.hash() ^ hashKey(args...);
 }
 //---------------------------------------------------------------------------
+
+
+
+
+
+//
+//  Get Types from strings (for loading data from *.tbl-files)
+//
+
+template<typename T>
+inline auto readAttribute(std::string att_value)
+{
+  static_assert(sizeof(T) == 0, "Read used for unhandled type!\n");
+};
+
+template<>
+inline auto readAttribute<Integer>(std::string att_value)
+{
+  return Integer::castString(att_value.c_str(), att_value.length());
+}
+/*
+template<>
+inline auto readAttribute<Date>(std::string att_value)
+{
+  return Date::castString(att_value.c_str(), att_value.length());
+}
+*/
+
+template<>
+inline auto readAttribute<Date>(std::string att_value)
+{
+  uint32_t date = atoi(att_value.c_str());
+  return Date(date);
+}
+
+template<>
+inline auto readAttribute<Varchar<10>>(std::string att_value)
+{
+  return Varchar<10>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Varchar<16>>(std::string att_value)
+{
+  return Varchar<16>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Varchar<20>>(std::string att_value)
+{
+  return Varchar<20>::build(att_value.c_str());
+}
+template<>
+inline auto readAttribute<Varchar<24>>(std::string att_value)
+{
+  return Varchar<24>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Varchar<50>>(std::string att_value)
+{
+  return Varchar<50>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Varchar<500>>(std::string att_value)
+{
+  return Varchar<500>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Char<2>>(std::string att_value)
+{
+  return Char<2>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Char<9>>(std::string att_value)
+{
+  return Char<9>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Char<16>>(std::string att_value)
+{
+  return Char<16>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Char<24>>(std::string att_value)
+{
+  return Char<24>::build(att_value.c_str());
+}
+
+template<>
+inline auto readAttribute<Numeric<1, 0>>(std::string att_value)
+{
+  return Numeric<1,0>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<2, 0>>(std::string att_value)
+{
+  return Numeric<2,0>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<4, 0>>(std::string att_value)
+{
+  return Numeric<4,0>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<4, 4>>(std::string att_value)
+{
+  return Numeric<4,4>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<5, 2>>(std::string att_value)
+{
+  return Numeric<5,2>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<6, 2>>(std::string att_value)
+{
+  return Numeric<6,2>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<8, 0>>(std::string att_value)
+{
+  return Numeric<8, 0>::castString (att_value.c_str(), att_value.length());
+}
+
+template<>
+inline auto readAttribute<Numeric<12, 2>>(std::string att_value)
+{
+  return Numeric<12,2>::castString (att_value.c_str(), att_value.length());
+}
+
+
+
+
+
+
+
+
+
 #endif
