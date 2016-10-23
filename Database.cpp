@@ -8,15 +8,15 @@
 void Database::printInfo() const
 {
     std::cout << "Database - RowStore\n" << std::endl;
-    std::cout << "Customer has " << c.rows.size() << " rows!" << std::endl;
-    std::cout << "District has " << d.rows.size() << " rows!" << std::endl;
-    std::cout << "History has " << h.rows.size() << " rows!" << std::endl;
-    std::cout << "Item has " << i.rows.size() << " rows!" << std::endl;
-    std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.rows.size() << " rows!" << std::endl;
-    std::cout << "Stock has " << s.rows.size() << " rows!" << std::endl;
-    std::cout << "Warehouse has " << w.rows.size() << " rows!" << std::endl;
+    std::cout << "\tCustomer has " << c.rows.size() << " rows!" << std::endl;
+    std::cout << "\tDistrict has " << d.rows.size() << " rows!" << std::endl;
+    std::cout << "\tHistory has " << h.rows.size() << " rows!" << std::endl;
+    std::cout << "\tItem has " << i.rows.size() << " rows!" << std::endl;
+    std::cout << "\tNewOrder has " << no.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.rows.size() << " rows!" << std::endl;
+    std::cout << "\tStock has " << s.rows.size() << " rows!" << std::endl;
+    std::cout << "\tWarehouse has " << w.rows.size() << " rows!" << std::endl;
 }
   
 
@@ -167,9 +167,10 @@ void Database::newOrderRandom(Timestamp now,int32_t w_id) {
 
 void Database::printTask1Info(int numRepeat)
 {
-    std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.rows.size() << " rows!\n" << std::endl;
+    std::cout << "Database - RowStore\n" << std::endl;
+    std::cout << "\tNewOrder has " << no.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.rows.size() << " rows!\n" << std::endl;
       
     std::chrono::time_point<std::chrono::system_clock> start, end;
   start = std::chrono::system_clock::now();
@@ -180,11 +181,11 @@ void Database::printTask1Info(int numRepeat)
   }
   end = std::chrono::system_clock::now();
 
-  std::cout << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
+  std::cout << "\t" << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
   
-    std::cout << "NewOrder has " << no.rows.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.rows.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.rows.size() << " rows!" << std::endl;
+    std::cout << "\tNewOrder has " << no.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.rows.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.rows.size() << " rows!" << std::endl;
   
   
 }

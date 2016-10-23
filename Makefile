@@ -3,4 +3,4 @@ HEADER=Types.hpp Row.hpp Warehouse.hpp WarehouseColumn.hpp Customer.hpp Customer
 CPP=Types.cpp Warehouse.cpp WarehouseColumn.cpp Customer.cpp CustomerColumn.cpp District.cpp DistrictColumn.cpp History.cpp HistoryColumn.cpp Item.cpp ItemColumn.cpp NewOrder.cpp NewOrderColumn.cpp Order.cpp OrderColumn.cpp OrderLine.cpp OrderLineColumn.cpp Stock.cpp Database.cpp DatabaseColumn.cpp WarehouseColumn.cpp StockColumn.cpp main.cpp
 
 all:
-	$(CC) -g -O2 -Wall -std=c++17 $(CPP) -o mmDBS -lstdc++fs
+	$(CC) -g -O3 -Wall -std=c++17 $(CPP) -o mmDBS -lstdc++fs

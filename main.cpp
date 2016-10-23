@@ -13,12 +13,8 @@
 
 int main()
 {
-  std::cout << "Main Memory Database System\n" << std::endl;
+  std::cout << "Practial Course - Main Memory Database System\n" << std::endl;
 
-  WarehouseColumn w{"./task1/tpcc_warehouse.tbl"};
-  
-  //std::cout << "w_id = 0 :::::: " << w.w_id(Integer{0}) << std::endl;
-  
   {
     DatabaseColumn db_column;
     db_column.printTask1Info(1'000'000);

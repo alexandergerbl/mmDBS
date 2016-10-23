@@ -7,15 +7,15 @@
   
 void DatabaseColumn::printInfo() const
 {
-    std::cout << "Customer has " << c.size() << " rows!" << std::endl;
-    std::cout << "District has " << d.size() << " rows!" << std::endl;
-    std::cout << "History has " << h.size() << " rows!" << std::endl;
-    std::cout << "Item has " << i.size() << " rows!" << std::endl;
-    std::cout << "NewOrder has " << no.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.size() << " rows!" << std::endl;
-    std::cout << "Stock has " << s.size() << " rows!" << std::endl;
-    std::cout << "Warehouse has " << w.size() << " rows!" << std::endl;
+    std::cout << "\tCustomer has " << c.size() << " rows!" << std::endl;
+    std::cout << "\tDistrict has " << d.size() << " rows!" << std::endl;
+    std::cout << "\tHistory has " << h.size() << " rows!" << std::endl;
+    std::cout << "\tItem has " << i.size() << " rows!" << std::endl;
+    std::cout << "\tNewOrder has " << no.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.size() << " rows!" << std::endl;
+    std::cout << "\tStock has " << s.size() << " rows!" << std::endl;
+    std::cout << "\tWarehouse has " << w.size() << " rows!" << std::endl;
 }
   
 
@@ -172,9 +172,9 @@ void DatabaseColumn::newOrderRandom(Timestamp now,int32_t w_id) {
 void DatabaseColumn::printTask1Info(int numRepeat)
 {
     std::cout << "Database - ColumnStore\n" << std::endl;
-    std::cout << "NewOrder has " << no.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.size() << " rows!\n" << std::endl;
+    std::cout << "\tNewOrder has " << no.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.size() << " rows!\n" << std::endl;
       
     std::chrono::time_point<std::chrono::system_clock> start, end;
   start = std::chrono::system_clock::now();
@@ -185,11 +185,11 @@ void DatabaseColumn::printTask1Info(int numRepeat)
   }
   end = std::chrono::system_clock::now();
 
-  std::cout << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
+  std::cout << "\t" << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " newOrderRandom/s\n" << std::endl;
   
-    std::cout << "NewOrder has " << no.size() << " rows!" << std::endl;
-    std::cout << "Order has " << o.size() << " rows!" << std::endl;
-    std::cout << "OrderLine has " << ol.size() << " rows!\n" << std::endl;
+    std::cout << "\tNewOrder has " << no.size() << " rows!" << std::endl;
+    std::cout << "\tOrder has " << o.size() << " rows!" << std::endl;
+    std::cout << "\tOrderLine has " << ol.size() << " rows!\n" << std::endl;
   
   
 }
