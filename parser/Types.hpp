@@ -6,11 +6,13 @@
 #include <cstdint>
 #include <string.h>
 
+#include <sstream>
+
 /**
  * Types
  */
 namespace Types {
-   enum class Tag : unsigned {Integer, Char, Varchar};
+   enum class Tag : unsigned {Integer, Char, Varchar, Timestamp};
 }
 
 
@@ -18,6 +20,22 @@ namespace Types {
  * Integer
  */
 typedef int Integer;
+
+/**
+ * Timestamp
+ */
+struct Timestamp{
+  uint64_t value;  
+  void loadString(const std::string& str) {
+    value = strtoll(str.c_str(), NULL, 10);
+  }
+  std::string toString(){
+    std::ostringstream oss;
+    oss << value;
+   return oss.str();
+  }
+};
+
 
 /**
  * Varchar

@@ -16,6 +16,7 @@ namespace keyword {
    const std::string Null = "null";
    const std::string Char = "char";
    const std::string Varchar = "varchar";
+   const std::string Timestamp = "timestamp";
 }
 
 namespace literal {
@@ -60,7 +61,8 @@ static bool isIdentifier(const std::string& str) {
       str==keyword::Not ||
       str==keyword::Null ||
       str==keyword::Char ||
-      str==keyword::Varchar
+      str==keyword::Varchar ||
+      str==keyword::Timestamp
    )
       return false;
    return str.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
@@ -177,6 +179,9 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          if (tok==keyword::Integer) {
             schema.relations.back().attributes.back().type=Types::Tag::Integer;
             state=State::AttributeTypeInt;
+         } else if (tok==keyword::Timestamp) {
+             schema.relations.back().attributes.back().type=Types::Tag::Timestamp;
+            state=State::AttributeTypeTimestamp;
          } else if (tok==keyword::Varchar) {
             schema.relations.back().attributes.back().type=Types::Tag::Varchar;
             state=State::AttributeTypeVarchar;
@@ -268,6 +273,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
       case State::VarcharEnd: /* fallthrough */
       case State::CharEnd: /* fallthrough */
       case State::NumericEnd: /* fallthrough */
+      case State::AttributeTypeTimestamp: /* fallthrough */
       case State::AttributeTypeInt:
          if (tok.size()==1 && tok[0]==literal::Comma)
             state=State::Separator;
