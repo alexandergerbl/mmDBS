@@ -15,6 +15,7 @@ namespace keyword {
    const std::string Not = "not";
    const std::string Null = "null";
    const std::string Char = "char";
+   const std::string Varchar = "varchar";
 }
 
 namespace literal {
@@ -58,7 +59,8 @@ static bool isIdentifier(const std::string& str) {
       str==keyword::Numeric ||
       str==keyword::Not ||
       str==keyword::Null ||
-      str==keyword::Char
+      str==keyword::Char ||
+      str==keyword::Varchar
    )
       return false;
    return str.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
@@ -175,6 +177,9 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          if (tok==keyword::Integer) {
             schema.relations.back().attributes.back().type=Types::Tag::Integer;
             state=State::AttributeTypeInt;
+         } else if (tok==keyword::Varchar) {
+            schema.relations.back().attributes.back().type=Types::Tag::Varchar;
+            state=State::AttributeTypeVarchar;
          } else if (tok==keyword::Char) {
             schema.relations.back().attributes.back().type=Types::Tag::Char;
             state=State::AttributeTypeChar;
@@ -184,6 +189,28 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          }
          else throw ParserError(line, "Expected type after attribute name, found '"+token+"'");
          break;
+//ADD Varchar
+      case State::AttributeTypeVarchar:
+         if (tok.size()==1 && tok[0]==literal::ParenthesisLeft)
+            state=State::VarcharBegin;
+         else
+            throw ParserError(line, "Expected '(' after 'VARCHAR', found'"+token+"'");
+         break;
+      case State::VarcharBegin:
+         if (isInt(tok)) {
+            schema.relations.back().attributes.back().len=std::atoi(tok.c_str());
+            state=State::VarcharValue;
+         } else {
+            throw ParserError(line, "Expected integer after 'VARCHAR(', found'"+token+"'");
+         }
+         break;
+      case State::VarcharValue:
+         if (tok.size()==1 && tok[0]==literal::ParenthesisRight)
+            state=State::VarcharEnd;
+         else
+            throw ParserError(line, "Expected ')' after length of VARCHAR, found'"+token+"'");
+         break;
+//END Varchar
       case State::AttributeTypeChar:
          if (tok.size()==1 && tok[0]==literal::ParenthesisLeft)
             state=State::CharBegin;
@@ -238,6 +265,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             throw ParserError(line, "Expected second length for NUMERIC type, found'"+token+"'");
          }
          break;
+      case State::VarcharEnd: /* fallthrough */
       case State::CharEnd: /* fallthrough */
       case State::NumericEnd: /* fallthrough */
       case State::AttributeTypeInt:
