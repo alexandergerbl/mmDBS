@@ -176,7 +176,7 @@ void Database::printTask1Info(int numRepeat)
   
   for(auto i = 0; i < numRepeat; i++)
   {
-      newOrderRandom(Timestamp{static_cast<uint64_t>( 40+i)}, i%5);
+      newOrderRandom(Timestamp{static_cast<uint64_t>( 40+i)}, 1+(i%5));
   }
   end = std::chrono::system_clock::now();
 
