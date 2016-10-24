@@ -9,7 +9,6 @@
 
 #include "DatabaseColumn.hpp"
 
-#include "WarehouseColumn.hpp"
 
 int main()
 {

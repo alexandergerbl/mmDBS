@@ -533,13 +533,13 @@ inline auto readAttribute<Integer>(std::string att_value)
 {
   return Integer::castString(att_value.c_str(), att_value.length());
 }
-/*
+
 template<>
-inline auto readAttribute<Date>(std::string att_value)
+inline auto readAttribute<Timestamp>(std::string att_value)
 {
-  return Date::castString(att_value.c_str(), att_value.length());
+  return Timestamp::castString(att_value.c_str(), att_value.length());
 }
-*/
+
 
 template<>
 inline auto readAttribute<Date>(std::string att_value)

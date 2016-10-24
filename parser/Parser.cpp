@@ -86,7 +86,6 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
    std::transform(token.begin(), token.end(), std::back_inserter(tok), tolower);
    switch(state) {
       case State::Semicolon: /* fallthrough */
-          std::cout << schema.toString() << std::endl;
       case State::Init:
          if (tok==keyword::Create)
             state=State::Create;
@@ -111,7 +110,6 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          break;
 //Added for index
       case State::Index:
-          std::cout << tok << std::endl;
           if (isIdentifier(tok)) {
             state=State::IndexName;
             //dont remember nonPrimaryKey name e.g. customer_wdl
@@ -251,7 +249,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             auto it = std::find_if(attributes.begin(), attributes.end(), p);
             if (it == attributes.end())
                throw ParserError(line, "'"+token+"' is not an attribute of '"+schema.relations.back().name+"'");
-            schema.relations.back().primaryKey.push_back(std::distance(attributes.begin(), it));
+            schema.relations.back().primaryKey.insert(schema.relations.back().primaryKey.begin(), (std::distance(attributes.begin(), it)));
             state=State::KeyName;
          } else {
             throw ParserError(line, "Expected key attribute, found '"+token+"'");

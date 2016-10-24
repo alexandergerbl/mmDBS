@@ -29,5 +29,7 @@ struct Schema {
    //end nonprimaryKey
    std::vector<Schema::Relation> relations;
    std::string toString() const;
+   
+   std::string toCPP() const;
 };
 #endif
