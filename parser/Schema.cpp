@@ -89,6 +89,35 @@ std::string Schema::toCPP() const
        //getsize    
         out << "\tstd::size_t size() const\n\t{\n\t\treturn std::get<0>(data).size();\n\t}\n";
 
+        
+        //insert
+        
+        out << "\tvoid insert(";
+        
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+         out << type(rel.attributes[rel.primaryKey[i]]) <<" " << rel.attributes[rel.primaryKey[i]].name;
+         if(i != rel.primaryKey.size()-1)
+             out << ", ";
+        }
+        out << ")\n\t{\n\t\tauto tid = this->size();\n\n";
+        //add to each column
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+            out << "\t\tthis->" << rel.attributes[rel.primaryKey[i]].name << "().emplace_back(" << rel.attributes[rel.primaryKey[i]].name << ");\n"; ;
+        }
+        
+        out << "this->keys[std::make_tuple(";
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+            out << rel.attributes[rel.primaryKey[i]].name;
+            if(i != rel.primaryKey.size()-1)
+                out << ", ";
+        }
+        
+        out << ")] = tid;";
+        out << "\t}\n";
+        
       out << "};\n\n";
    }
    return out.str();
