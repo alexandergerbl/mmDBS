@@ -21,7 +21,7 @@ public:
     return this->keys[std::make_tuple(w_id)];
   }
 
-
+  void WarehouseColumn::deleteEntry(Integer const& w_id);
   
   std::size_t size() const{
     return std::get<0>(data).size();

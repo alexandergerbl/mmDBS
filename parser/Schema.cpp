@@ -68,7 +68,7 @@ std::string Schema::toCPP() const
       out << std::endl;
       
       //getByPrimaryKey
-      out << "\tTid getByPrimaryKey(";
+      out << "\tTid find(";
        for (auto i = 0; i < rel.primaryKey.size(); i++)
        {
          out << "const " << type(rel.attributes[rel.primaryKey[i]]) <<"& " << rel.attributes[rel.primaryKey[i]].name;
@@ -86,12 +86,15 @@ std::string Schema::toCPP() const
        out << ")];\n\t}\n";
       
         
-       //getsize    
+       /**
+         * size()
+         */    
         out << "\tstd::size_t size() const\n\t{\n\t\treturn std::get<0>(data).size();\n\t}\n";
 
         
-        //insert
-        
+        /**
+         * Insert
+         */
         out << "\tvoid insert(";
         
         for (auto i = 0; i < rel.primaryKey.size(); i++)
@@ -113,10 +116,51 @@ std::string Schema::toCPP() const
             out << rel.attributes[rel.primaryKey[i]].name;
             if(i != rel.primaryKey.size()-1)
                 out << ", ";
-        }
-        
+        }        
         out << ")] = tid;";
         out << "\t}\n";
+        
+        /**
+         * Delete
+         */
+        out << "\tvoid deleteEntry(";
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+         out << "const " << type(rel.attributes[rel.primaryKey[i]]) <<"& " << rel.attributes[rel.primaryKey[i]].name;
+         if(i != rel.primaryKey.size()-1)
+             out << ", ";
+        }
+        out << ")\n\t{\n";
+        out << "\t\tauto tid = this->find(";
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+         out << rel.attributes[rel.primaryKey[i]].name;
+         if(i != rel.primaryKey.size()-1)
+             out << ", ";
+        }
+        out << ");\n\n";
+        
+            //...for all elements
+        for (auto i = 0; i < rel.attributes.size(); i++)
+        {
+            out << "\t\tauto& tmp = this->" << rel.attributes[i].name << "();\n"; ;
+            out << "\t\tstd::iter_swap(tmp.begin()+tid, tmp.end()-1);\n";
+            out << "\t\ttmp.pop_back();\n";
+            out << "this->keys.erase(std::make_tuple(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << "));\n";
+            out << "\n";
+        }
+       
+        
+        out << "}\n\n";
+        
+        
         
       out << "};\n\n";
    }
