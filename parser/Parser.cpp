@@ -10,9 +10,11 @@ namespace keyword {
    const std::string Key = "key";
    const std::string Create = "create";
    const std::string Table = "table";
+   const std::string Index = "index";
    const std::string Integer = "integer";
    const std::string Numeric = "numeric";
    const std::string Not = "not";
+   const std::string On = "on";
    const std::string Null = "null";
    const std::string Char = "char";
    const std::string Varchar = "varchar";
@@ -46,6 +48,7 @@ std::unique_ptr<Schema> Parser::parse() {
       if (token.find("\n")!=std::string::npos)
          ++line;
    }
+   
    in.close();
    return std::move(s);
 }
@@ -55,10 +58,12 @@ static bool isIdentifier(const std::string& str) {
       str==keyword::Primary ||
       str==keyword::Key ||
       str==keyword::Table ||
+      str==keyword::Index ||
       str==keyword::Create ||
       str==keyword::Integer ||
       str==keyword::Numeric ||
       str==keyword::Not ||
+      str==keyword::On ||
       str==keyword::Null ||
       str==keyword::Char ||
       str==keyword::Varchar ||
@@ -81,6 +86,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
    std::transform(token.begin(), token.end(), std::back_inserter(tok), tolower);
    switch(state) {
       case State::Semicolon: /* fallthrough */
+          std::cout << schema.toString() << std::endl;
       case State::Init:
          if (tok==keyword::Create)
             state=State::Create;
@@ -90,8 +96,10 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
       case State::Create:
          if (tok==keyword::Table)
             state=State::Table;
+         else if(tok==keyword::Index)
+             state=State::Index;
          else
-            throw ParserError(line, "Expected 'TABLE', found '"+token+"'");
+            throw ParserError(line, "Expected 'TABLE' or 'INDEX', found '"+token+"'");
          break;
       case State::Table:
          if (isIdentifier(tok)) {
@@ -101,6 +109,94 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             throw ParserError(line, "Expected TableName, found '"+token+"'");
          }
          break;
+//Added for index
+      case State::Index:
+          std::cout << tok << std::endl;
+          if (isIdentifier(tok)) {
+            state=State::IndexName;
+            //dont remember nonPrimaryKey name e.g. customer_wdl
+          } else {
+            throw ParserError(line, "Expected IndexName, found '"+token+"'");
+          }
+          break;
+      case State::IndexName:
+          if (tok==keyword::On)
+            state=State::On;
+          break;
+      case State::On:
+          if (isIdentifier(tok)) {
+            state=State::IndexTableName;
+            
+            schema.relationName = tok;
+           
+            //check whether table/relation exists
+            auto it_relation = std::find_if(schema.relations.begin(), schema.relations.end(), [&](auto const& r){ return (tok == r.name);});
+    
+            if(it_relation == schema.relations.end())
+                throw ParserError(line, "'"+token+"' is not a TABLE ");
+            //remember table on which to set up a non primary key  
+          } else {
+            throw ParserError(line, "Expected IndexTableName, found '"+token+"'");
+          }
+          break;
+      case State::IndexTableName:
+          if (tok.size()==1 && tok[0]==literal::ParenthesisLeft)
+            state=State::NonPrimaryKeyStart; //TODO 
+          else
+            throw ParserError(line, "Expected '(', found '"+token+"'");
+          break;
+      case State::NonPrimaryKeyStart:
+          //KeyListBegin adjust
+          //same as key but for non-primaryKey
+          if (isIdentifier(tok)) {
+            struct AttributeNamePredicate {
+               const std::string& name;
+               AttributeNamePredicate(const std::string& name) : name(name) {}
+               bool operator()(const Schema::Relation::Attribute& attr) const {
+                  return attr.name == name;
+               }
+            };
+            //check whether 
+            auto it_relation = std::find_if(schema.relations.begin(), schema.relations.end(), [&](auto const& r){ return (schema.relationName == r.name);});
+            const auto& attributes = it_relation->attributes;
+      //            const auto& attributes = schema.relations.back().attributes;
+            AttributeNamePredicate p(token);
+            auto it = std::find_if(attributes.begin(), attributes.end(), p);
+            if (it == attributes.end())
+               throw ParserError(line, "'"+token+"' is not an attribute of '"+schema.relations.back().name+"'");
+            schema.nonprimaryKey.push_back(std::distance(attributes.begin(), it));
+            
+            state=State::NonPrimaryKeyName;
+         } else {
+            throw ParserError(line, "Expected key attribute, found '"+token+"'");
+         }
+         break;
+      case State::NonPrimaryKeyName:
+         if (tok.size()==1 && tok[0] == literal::Comma)
+            state=State::NonPrimaryKeyStart;
+         else if (tok.size()==1 && tok[0] == literal::ParenthesisRight)
+            state=State::NonPrimaryKeyListEnd;
+         else
+            throw ParserError(line, "Expected ',' or ')', found '"+token+"'");
+         break;
+      case State::NonPrimaryKeyListEnd:
+         if (tok.size()==1 && tok[0] == literal::Semicolon)
+         {
+            //copy nonprimarykey to relation and resize() vector to 0 and relation name of nonprimarykey
+            //token read to much data until here
+            auto it_relation = std::find_if(schema.relations.begin(), schema.relations.end(), [&](auto const& r){ return (schema.relationName == r.name);});
+        
+            it_relation->nonPrimaryKey = schema.nonprimaryKey;
+            schema.nonprimaryKey.clear();
+            
+            state=State::Semicolon;
+         }
+         else
+            throw ParserError(line, "Expected ',' or ')', found '"+token+"'");
+         break;
+
+         
+//end index
       case State::TableName:
          if (tok.size()==1 && tok[0]==literal::ParenthesisLeft)
             state=State::CreateTableBegin;
@@ -121,6 +217,8 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             throw ParserError(line, "Expected attribute definition, primary key definition or ')', found '"+token+"'");
          }
          break;
+      
+      
       case State::CreateTableEnd:
          if (tok.size()==1 && tok[0]==literal::Semicolon)
             state=State::Semicolon;
@@ -189,7 +287,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             schema.relations.back().attributes.back().type=Types::Tag::Char;
             state=State::AttributeTypeChar;
          } else if (tok==keyword::Numeric) {
-            //schema.relations.back().attributes.back().type=Types::Tag::Numeric;
+            schema.relations.back().attributes.back().type=Types::Tag::Numeric;
             state=State::AttributeTypeNumeric;
          }
          else throw ParserError(line, "Expected type after attribute name, found '"+token+"'");
@@ -244,7 +342,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          break;
       case State::NumericBegin:
          if (isInt(tok)) {
-            //schema.relations.back().attributes.back().len1=std::atoi(tok.c_str());
+            schema.relations.back().attributes.back().len1=std::atoi(tok.c_str());
             state=State::NumericValue1;
          } else {
             throw ParserError(line, "Expected integer after 'NUMERIC(', found'"+token+"'");
@@ -264,7 +362,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          break;
       case State::NumericSeparator:
          if (isInt(tok)) {
-            //schema.relations.back().attributes.back().len2=std::atoi(tok.c_str());
+            schema.relations.back().attributes.back().len2=std::atoi(tok.c_str());
             state=State::NumericValue2;
          } else {
             throw ParserError(line, "Expected second length for NUMERIC type, found'"+token+"'");

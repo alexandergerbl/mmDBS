@@ -1,5 +1,5 @@
 CXX:=g++
-CXXFLAGS:=-std=c++0x -g -O2 -Wall
+CXXFLAGS:=-std=c++14 -g -O2 -Wall
 
 all: parser
 

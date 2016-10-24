@@ -1,9 +1,11 @@
 #include "Schema.hpp"
 
+#include <iostream>
 #include <sstream>
 
 static std::string type(const Schema::Relation::Attribute& attr) {
    Types::Tag type = attr.type;
+   std::cout << "Attr " << attr.name << std::endl;
    switch(type) {
       case Types::Tag::Integer:
          return "Integer";
@@ -14,11 +16,11 @@ static std::string type(const Schema::Relation::Attribute& attr) {
          ss << "Varchar(" << attr.len << ")";
          return ss.str();
       }
-      /*case Types::Tag::Numeric: {
+      case Types::Tag::Numeric: {
          std::stringstream ss;
          ss << "Numeric(" << attr.len1 << ", " << attr.len2 << ")";
          return ss.str();
-      }*/
+      }
       case Types::Tag::Char: {
          std::stringstream ss;
          ss << "Char(" << attr.len << ")";
@@ -29,10 +31,12 @@ static std::string type(const Schema::Relation::Attribute& attr) {
 }
 
 std::string Schema::toString() const {
-   std::stringstream out;
+   std::stringstream out;  
+   
    for (const Schema::Relation& rel : relations) {
       out << rel.name << std::endl;
       out << "\tPrimary Key:";
+      
       for (unsigned keyId : rel.primaryKey)
          out << ' ' << rel.attributes[keyId].name;
       out << std::endl;
