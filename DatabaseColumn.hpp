@@ -37,6 +37,8 @@ public:
   
   void newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp datetime);
   
+  void delivery(Integer w_id, Integer o_carrier_id, Timestamp datetime);
+  
   const int32_t warehouses=5;
 
   int32_t urand(int32_t min,int32_t max);

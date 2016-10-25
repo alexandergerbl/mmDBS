@@ -130,6 +130,37 @@ void DatabaseColumn::newOrder(Integer w_id, Integer d_id, Integer c_id, int32_t 
 
 }
 
+void DatabaseColumn::delivery(Integer w_id, Integer o_carrier_id, Timestamp datetime)
+{
+/*    Integer d_id{1};
+    for(;d_id <= Integer{10};d_id = d_id + 1)
+    {
+      //select min(no_o_id) as o_id from neworder where no_w_id=w_id and no_d_id=d_id order by no_o_id else { continue; } -- ignore this district if no row found
+ 
+        Integer o_id;
+        no.deleteEntry(o_id, d_id, w_id); 
+      
+        auto o_tid = o.getByPrimaryKey(o_id, d_id, w_id);
+        auto o_ol_cnt = o.o_ol_cnt()[o_tid];
+        auto o_c_id = o.o_c_id()[o_tid];
+        
+        o.o_carrier_id()[o_tid] = o_carrier_id;
+      
+        Numeric<6, 2> ol_total = 0;
+        for(Integer ol_number = 1; ol_number <= 10; ol_number = ol_number +1)
+        {
+            auto ol_tid = ol.getByPrimaryKey(o_id, d_id, w_id, ol_number);
+            auto ol_amount = ol.ol_amount()[ol_tid];
+            ol_total = ol_total + ol_amount;
+            ol.ol_delivery_d()[ol_tid] = datetime;
+        }
+*/        /*     
+     TODO achtung primary keys ordnen in schema.sql orderline ! ! !
+
+      update customer set c_balance=c_balance+ol_total where c_w_id=w_id and c_d_id=d_id and c_id=o_c_id;
+*/
+    }
+}
 
  
 
