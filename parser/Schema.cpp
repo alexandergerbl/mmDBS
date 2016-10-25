@@ -56,7 +56,7 @@ std::string Schema::toCPP() const
       for (const auto& attr : rel.attributes)
          out << ',' << type(attr);
       //Constructor
-      out << ">\n{\npublic:\n\t" << rel.name << "(std::string file) : ColumnStore(file){}"; 
+      out << ">\n{\npublic:\n\t" << rel.name << "(std::string file) : ColumnStore(file){}\n\n"; 
       
       //getter&setter
       int j = 0;
@@ -110,15 +110,15 @@ std::string Schema::toCPP() const
             out << "\t\tthis->" << rel.attributes[rel.primaryKey[i]].name << "().emplace_back(" << rel.attributes[rel.primaryKey[i]].name << ");\n"; ;
         }
         
-        out << "this->keys[std::make_tuple(";
+        out << "\t\tthis->keys[std::make_tuple(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
             out << rel.attributes[rel.primaryKey[i]].name;
             if(i != rel.primaryKey.size()-1)
                 out << ", ";
         }        
-        out << ")] = tid;";
-        out << "\t}\n";
+        out << ")] = tid;\n";
+        out << "\t}\n\n";
         
         /**
          * Delete
@@ -146,7 +146,7 @@ std::string Schema::toCPP() const
             out << "\t\tauto& tmp = this->" << rel.attributes[i].name << "();\n"; ;
             out << "\t\tstd::iter_swap(tmp.begin()+tid, tmp.end()-1);\n";
             out << "\t\ttmp.pop_back();\n";
-            out << "this->keys.erase(std::make_tuple(";
+            out << "\t\tthis->keys.erase(std::make_tuple(";
             for (auto i = 0; i < rel.primaryKey.size(); i++)
             {
                 out << rel.attributes[rel.primaryKey[i]].name;
