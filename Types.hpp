@@ -537,7 +537,7 @@ inline auto readAttribute<Integer>(std::string att_value)
 template<>
 inline auto readAttribute<Timestamp>(std::string att_value)
 {
-  return Timestamp::castString(att_value.c_str(), att_value.length());
+  return Timestamp(atoi(att_value.c_str()));
 }
 
 
