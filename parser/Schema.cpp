@@ -49,14 +49,52 @@ std::string Schema::toCPP() const
 {
    std::stringstream out;  
    //header
-   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n\n";
+   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n#include<map>\n\n";
    
    for (const Schema::Relation& rel : relations) {
       out << "class " << rel.name << " : public ColumnStore<" << rel.primaryKey.size();
       for (const auto& attr : rel.attributes)
          out << ',' << type(attr);
+      out << ">\n{\n";
+      //if foreign key 
+      
+      if(!rel.nonPrimaryKey.empty())
+      {
+          out << "\nstd::multimap<std::tuple<";
+          //create multimap for non-primary key 
+          for(auto i = 0; i < rel.nonPrimaryKey.size(); i++)
+          {
+              out << type(rel.attributes[rel.nonPrimaryKey[i]]);
+              if(i != rel.nonPrimaryKey.size()-1)
+                  out << ", ";
+          }
+          out << ">, Tid> " << rel.nonPrimaryKeyName << ";\n\n";
+      }
+      
+      
       //Constructor
-      out << ">\n{\npublic:\n\t" << rel.name << "(std::string file) : ColumnStore(file){}\n\n"; 
+      if(rel.nonPrimaryKey.empty())
+      {
+         out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file){}\n\n";  
+      }
+      else
+      {
+          //load nonPrimaryKey
+          out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file)\n{\n";
+          out << "\t\tfor(auto i = 0; i < this->size(); i++)\n\t\t{\n";
+            //read all nonPrimaryKey attributes from row i 
+                out << "\t\t\tthis->" << rel.nonPrimaryKeyName << ".emplace(std::make_tuple(";
+                for(auto j = 0; j < rel.nonPrimaryKey.size(); j++)
+                {
+                    out << "std::get<" << rel.nonPrimaryKey[j] << ">(this->data)[i]";
+                    if(j != rel.nonPrimaryKey.size()-1)
+                        out << ", ";
+                }
+                out << "), i);";
+          out << "\n\t\t}\n";
+          out << "\n\t}\n\n"; 
+      }
+      
       
       //getter&setter
       int j = 0;
@@ -92,9 +130,9 @@ std::string Schema::toCPP() const
         out << "\tstd::size_t size() const\n\t{\n\t\treturn std::get<0>(data).size();\n\t}\n\n";
 
         
-        /**
+        /*******************************************************************
          * Insert
-         */
+         *******************************************************************/
         out << "\tvoid insert(";
         
         
@@ -127,11 +165,28 @@ std::string Schema::toCPP() const
                 out << ", ";
         }        
         out << ")] = tid;\n";
+        
+        if(!rel.nonPrimaryKey.empty())
+        {
+            //update nonprimarykey
+            out << "\n\t\tthis->" << rel.nonPrimaryKeyName << ".emplace(std::make_tuple(";
+            for (auto i = 0; i < rel.nonPrimaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.nonPrimaryKey[i]].name;
+                if(i != rel.nonPrimaryKey.size()-1)
+                    out << ", ";
+            }        
+            out << "), tid);\n";
+            
+        }
+        
+        
+        
         out << "\t}\n\n";
         
-        /**
+        /********************************************************
          * Delete
-         */
+         ********************************************************/
         out << "\tvoid deleteEntry(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
@@ -165,6 +220,21 @@ std::string Schema::toCPP() const
         }
         out << "));\n";
     
+        //if nonPrimaryKey
+        if(!rel.nonPrimaryKey.empty())
+        {
+            out << "\n\t\tauto it = this->" << rel.nonPrimaryKeyName << ".find(std::make_tuple(";
+            //for every nonprimary key attribute
+            for(auto j = 0; j < rel.nonPrimaryKey.size(); j++)
+                {
+                    out << "std::get<" << rel.nonPrimaryKey[j] << ">(this->data)[tid]";
+                    if(j != rel.nonPrimaryKey.size()-1)
+                        out << ", ";
+                }
+            out << "));\n";
+            out << "\t\tthis->" << rel.nonPrimaryKeyName << ".erase(it);\n";
+        }
+        
         //update tid of swapped entry
         out << "\n\t\tthis->keys.keys[std::make_tuple(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)

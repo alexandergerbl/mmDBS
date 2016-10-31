@@ -113,6 +113,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
           if (isIdentifier(tok)) {
             state=State::IndexName;
             //dont remember nonPrimaryKey name e.g. customer_wdl
+            schema.relations.back().nonPrimaryKeyName = token;
           } else {
             throw ParserError(line, "Expected IndexName, found '"+token+"'");
           }
@@ -163,7 +164,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             if (it == attributes.end())
                throw ParserError(line, "'"+token+"' is not an attribute of '"+schema.relations.back().name+"'");
             schema.nonprimaryKey.push_back(std::distance(attributes.begin(), it));
-            
+            it_relation->nonPrimaryKey.push_back(std::distance(attributes.begin(), it));
             state=State::NonPrimaryKeyName;
          } else {
             throw ParserError(line, "Expected key attribute, found '"+token+"'");

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <string.h>
-
+#include <algorithm>
 #include <sstream>
 
 /**

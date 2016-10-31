@@ -21,6 +21,7 @@ struct Schema {
       std::vector<unsigned> primaryKey;
       std::vector<unsigned> nonPrimaryKey;
       std::string relationName_tmp;
+      std::string nonPrimaryKeyName;
       Relation(const std::string& name) : name(name) {}
    };
    //nonPrimaryKey tmp buffer
