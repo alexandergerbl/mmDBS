@@ -424,6 +424,20 @@ std::string Schema::toCPP() const
    
    out << "\t}\n\n";
    
+   
+   /*
+    * deliveryRandom
+    */
+   out << "\n    void deliveryRandom(Timestamp now) {\n        delivery(urand(1,warehouses),urand(1,10),now);\n    }\n   ";
+   
+   /*
+    * 
+    * printInfoTask2
+    * 
+    */
+   out << "\n    void oltp(Timestamp now, int i) {\n        int rnd=urand(1,100);\n        if (rnd<=10) {\n            deliveryRandom(now);\n        } else {\n            newOrderRandom(now, i);\n        }\n    }\n    \n    void printTask2Info(int numRepeat)\n    {\n        std::cout << \"Database - ColumnStore\\n\" << std::endl;\n        std::chrono::time_point<std::chrono::system_clock> start, end;\n        start = std::chrono::system_clock::now();\n        \n        for(auto i = 0; i < numRepeat; i++)\n        {\n            oltp(Timestamp{static_cast<uint64_t>( 40+i)}, 1+(i%5));\n        }\n        end = std::chrono::system_clock::now();\n\n        std::cout << \"\\t\" << ((double) numRepeat*1000000) / std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << \" Ops/s\\n\" << std::endl;\n    }\n\n";
+   
+   
    //end of class DatabaseColumn
    out << "};\n\n";
    
@@ -432,7 +446,7 @@ std::string Schema::toCPP() const
    /*
     * print test main
     */
-   out << "\n\nint main()\n{\n\tDatabaseColumn db;\n\tdb.printTask1Info(1000000);\n\n\treturn 0;\n}";
+   out << "\n\nint main()\n{\n\tDatabaseColumn db;\n\tdb.printTask2Info(1000000);\n\n\treturn 0;\n}";
    
    return out.str();
 }
