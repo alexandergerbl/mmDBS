@@ -89,7 +89,7 @@ std::string Schema::toCPP() const
        /**
          * size()
          */    
-        out << "\tstd::size_t size() const\n\t{\n\t\treturn std::get<0>(data).size();\n\t}\n";
+        out << "\tstd::size_t size() const\n\t{\n\t\treturn std::get<0>(data).size();\n\t}\n\n";
 
         
         /**
@@ -164,7 +164,6 @@ std::string Schema::toCPP() const
                 out << ", ";
         }
         out << "));\n";
-        out << "\n";
     
         //update tid of swapped entry
         out << "\n\t\tthis->keys.keys[std::make_tuple(";
@@ -184,6 +183,31 @@ std::string Schema::toCPP() const
       out << "};\n\n";
       
    }
+   
+   
+   //create DatabaseColumn class
+   out << "\n\nclass DatabaseColumn\n{\npublic:\n";
+   
+   for(auto & rel : relations)
+   {
+       out << "\t" << rel.name << " m_" << rel.name << "{\"./task1/tpcc_" << rel.name << ".tbl\"};\n";
+   }
+   
+   out << std::endl << std::endl;
+   //Constructor
+   out << "\tDatabaseColumn(){};\n\n";
+   
+   //printInfo
+   out << "\tvoid printInfo() const\n\t{\n\t\t";
+   
+   for(auto & rel : relations)
+   {
+       out << "\t\tstd::cout << \"" << rel.name << " #entires: \" << m_" << rel.name << ".size() << std::endl;\n";
+   }
+   
+   out << "\t}\n\n";
+   //end of class DatabaseColumn
+   out << "};\n\n";
    
    //print test main
       out << "\n\nint main()\n{\n\twarehouse w{\"./task1/tpcc_warehouse.tbl\"};\n\tstd::cout << \"Warehouse size = \" << w.size() << std::endl;\n\n\treturn 0;\n}";
