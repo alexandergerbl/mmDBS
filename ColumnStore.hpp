@@ -88,10 +88,10 @@ auto createPrimaryKey(T&& keys)
 }
 
 //template<int numKeys, typename...> class TestKey,
-template <int NumKeys, typename... Types>
+template <typename... Types>
 struct ColumnStore {
     std::tuple<std::vector<Types>...> data;
-    PrimaryKeys<NumKeys, decltype(createPrimaryKey<NumKeys>(std::declval<std::tuple<Types...>>()))> keys;
+    
     char* token;
     
     ColumnStore(std::string const& file) {
@@ -114,11 +114,7 @@ struct ColumnStore {
             char s [line.length()];
             strcpy(s, line.c_str());
             token = std::strtok(s, "|");        
-            auto tmp = addRow<0, Types...>();
-            
-            //add primaryKey entry
-            auto tid = std::get<0>(data).size() - 1;              
-            keys[createPrimaryKey<NumKeys>(tmp)] = tid; 
+            addRow<0, Types...>();
             
         }
         
@@ -132,8 +128,6 @@ struct ColumnStore {
     template <int I>
     auto addRow() {
         static_assert(I == sizeof...(Types), "No further attributes!\n");
-        
-        return std::make_tuple();
     }
  
     template <int I, typename Arg, typename... Args>
@@ -145,7 +139,7 @@ struct ColumnStore {
         
         token = std::strtok(NULL, "|");
  
-        return std::tuple_cat(std::make_tuple(columnVal) , addRow<I + 1, Args...>());
+        addRow<I + 1, Args...>();
     }
     
     //Row& operator[](Row_Attr attr)

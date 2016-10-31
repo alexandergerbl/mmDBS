@@ -149,7 +149,7 @@ void DatabaseColumn::delivery(Integer w_id, Integer o_carrier_id, Timestamp date
         Numeric<6, 2> ol_total = 0;
         for(Integer ol_number = 1; ol_number <= 10; ol_number = ol_number +1)
         {
-            auto ol_tid = ol.getByPrimaryKey(o_id, d_id, w_id, ol_number);
+            auto ol_tid = ol.find(o_id, d_id, w_id, ol_number);
             auto ol_amount = ol.ol_amount()[ol_tid];
             ol_total = ol_total + ol_amount;
             ol.ol_delivery_d()[ol_tid] = datetime;

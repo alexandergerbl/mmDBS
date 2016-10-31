@@ -49,13 +49,52 @@ std::string Schema::toCPP() const
 {
    std::stringstream out;  
    //header
-   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n#include<map>\n\n";
+   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n#include<map>\n#include <utility>\n#include <iterator>\n\n";
    
    for (const Schema::Relation& rel : relations) {
-      out << "class " << rel.name << " : public ColumnStore<" << rel.primaryKey.size();
-      for (const auto& attr : rel.attributes)
-         out << ',' << type(attr);
+      out << "class " << rel.name << " : public ColumnStore<";
+      for (auto i = 0; i < rel.attributes.size(); i++)
+      {
+          out << type(rel.attributes[i]);
+          if(i != rel.attributes.size()-1)
+              out << ", ";
+         
+      }
       out << ">\n{\n";
+      
+      
+      //create primarykey
+      if(!rel.primaryKey.empty())
+      {
+          out << "\nstd::" << ((rel.name == "neworder") ? "map" : "unordered_map") << "<std::tuple<";
+          //create multimap for non-primary key 
+          for(auto i = 0; i < rel.primaryKey.size(); i++)
+          {
+              out << type(rel.attributes[rel.primaryKey[i]]);
+              if(i != rel.primaryKey.size()-1)
+                  out << ", ";
+          }
+          out << ">, Tid";
+          if(rel.name == "neworder")
+          {
+            out << "> keys;\n\n"; 
+          }
+          else
+          {
+             out << ", KeyCompare<" << rel.primaryKey.size() << ", " << "std::tuple<";
+            //create multimap for non-primary key 
+            for(auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << type(rel.attributes[rel.primaryKey[i]]);
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << ">>> keys;\n\n";  
+          }
+          
+      }
+      
+      
       //if foreign key 
       
       if(!rel.nonPrimaryKey.empty())
@@ -73,15 +112,27 @@ std::string Schema::toCPP() const
       
       
       //Constructor
-      if(rel.nonPrimaryKey.empty())
-      {
-         out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file){}\n\n";  
-      }
-      else
-      {
-          //load nonPrimaryKey
-          out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file)\n{\n";
-          out << "\t\tfor(auto i = 0; i < this->size(); i++)\n\t\t{\n";
+      
+      //load PrimaryKey
+        out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file)\n\t{\n";
+        if(!rel.nonPrimaryKey.empty())
+        {
+            out << "\t\tfor(auto i = 0; i < this->size(); i++)\n\t\t{\n";
+            //read all nonPrimaryKey attributes from row i 
+                out << "\t\t\tthis->keys.emplace(std::make_tuple(";
+                for(auto j = 0; j < rel.primaryKey.size(); j++)
+                {
+                    out << "std::get<" << rel.primaryKey[j] << ">(this->data)[i]";
+                    if(j != rel.primaryKey.size()-1)
+                        out << ", ";
+                }
+                out << "), i);";
+            out << "\n\t\t}\n";
+        }
+        //load nonprimarykey
+        if(!rel.nonPrimaryKey.empty())
+        {
+            out << "\t\tfor(auto i = 0; i < this->size(); i++)\n\t\t{\n";
             //read all nonPrimaryKey attributes from row i 
                 out << "\t\t\tthis->" << rel.nonPrimaryKeyName << ".emplace(std::make_tuple(";
                 for(auto j = 0; j < rel.nonPrimaryKey.size(); j++)
@@ -91,9 +142,10 @@ std::string Schema::toCPP() const
                         out << ", ";
                 }
                 out << "), i);";
-          out << "\n\t\t}\n";
-          out << "\n\t}\n\n"; 
-      }
+            out << "\n\t\t}";
+        }
+        out << "\n\t}\n\n"; 
+
       
       
       //getter&setter
@@ -105,23 +157,26 @@ std::string Schema::toCPP() const
       }
       out << std::endl;
       
-      //find
-      out << "\tTid find(";
-       for (auto i = 0; i < rel.primaryKey.size(); i++)
-       {
-         out << "const " << type(rel.attributes[rel.primaryKey[i]]) <<"& " << rel.attributes[rel.primaryKey[i]].name;
-         if(i != rel.primaryKey.size()-1)
-             out << ", ";
-       }
-       out << ") const\n\t{\n\t\treturn keys[std::make_tuple(";
-       for (auto i = 0; i < rel.primaryKey.size(); i++)
-       {
-         out << rel.attributes[rel.primaryKey[i]].name;
-         if(i != rel.primaryKey.size()-1)
-             out << ", ";
-       }
-             
-       out << ")];\n\t}\n";
+      if(!rel.primaryKey.empty())
+      {
+            //find
+            out << "\tTid find(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << "const " << type(rel.attributes[rel.primaryKey[i]]) <<"& " << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << ") \n\t{\n\t\treturn this->keys[std::make_tuple(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+                    
+            out << ")];\n\t}\n"; 
+      }
       
         
        /**
@@ -143,7 +198,7 @@ std::string Schema::toCPP() const
                 out << ", ";
             
         }
-        out << ")\n\t{\n\t\tauto tid = this->size();\n\n\t\t//if(this->keys.keys.count(std::make_tuple(";
+        out << ")\n\t{\n\t\tauto tid = this->size();\n\n\t\t//if(this->keys.count(std::make_tuple(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
             out << rel.attributes[rel.primaryKey[i]].name;
@@ -157,14 +212,18 @@ std::string Schema::toCPP() const
             out << "\t\tthis->" << rel.attributes[i].name << "().emplace_back(" << rel.attributes[i].name << ");\n"; ;
         }
         
-        out << "\n\t\tthis->keys[std::make_tuple(";
-        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        if(!rel.primaryKey.empty())
         {
-            out << rel.attributes[rel.primaryKey[i]].name;
-            if(i != rel.primaryKey.size()-1)
-                out << ", ";
-        }        
-        out << ")] = tid;\n";
+            out << "\n\t\tthis->keys[std::make_tuple(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }        
+            out << ")] = tid;\n";
+        }
+        
         
         if(!rel.nonPrimaryKey.empty())
         {
@@ -187,6 +246,11 @@ std::string Schema::toCPP() const
         /********************************************************
          * Delete
          ********************************************************/
+        
+        if(!rel.primaryKey.empty())
+        {
+        
+            
         out << "\tvoid deleteEntry(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
@@ -195,35 +259,24 @@ std::string Schema::toCPP() const
              out << ", ";
         }
         out << ")\n\t{\n";
-        out << "\t\tauto tid = this->find(";
-        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        if(!rel.primaryKey.empty())
         {
-         out << rel.attributes[rel.primaryKey[i]].name;
-         if(i != rel.primaryKey.size()-1)
-             out << ", ";
-        }
-        out << ");\n\n";
+            out << "\t\tauto tid = this->find("; 
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << ");\n\n";
         
-            //...for all elements
-        for (auto i = 0; i < rel.attributes.size(); i++)
-        {
-            out << "\t\tstd::iter_swap(this->" << rel.attributes[i].name << "().begin()+tid, this->" << rel.attributes[i].name << "().end()-1);\n";
-            out << "\t\tthis->" << rel.attributes[i].name << "().pop_back();\n";    
         }
-       
-        out << "\n\t\tthis->keys.keys.erase(std::make_tuple(";
-        for (auto i = 0; i < rel.primaryKey.size(); i++)
-        {
-            out << rel.attributes[rel.primaryKey[i]].name;
-            if(i != rel.primaryKey.size()-1)
-                out << ", ";
-        }
-        out << "));\n";
-    
+        
+        
         //if nonPrimaryKey
         if(!rel.nonPrimaryKey.empty())
         {
-            out << "\n\t\tauto it = this->" << rel.nonPrimaryKeyName << ".find(std::make_tuple(";
+            out << "\n\t\t//remove index from nonprimarykey before deletion\n\t\tauto iterpair = this->"<< rel.nonPrimaryKeyName << ".equal_range(std::make_tuple(";
             //for every nonprimary key attribute
             for(auto j = 0; j < rel.nonPrimaryKey.size(); j++)
                 {
@@ -232,23 +285,64 @@ std::string Schema::toCPP() const
                         out << ", ";
                 }
             out << "));\n";
-            out << "\t\tthis->" << rel.nonPrimaryKeyName << ".erase(it);\n";
+            out << "\t\tauto it = iterpair.first;\n        for (; it != iterpair.second; ++it) {\n            if (it->second == tid) { \n                this->" << rel.nonPrimaryKeyName <<  ".erase(it);\n                break;\n            }\n        }\n";
+            
         }
         
-        //update tid of swapped entry
-        out << "\n\t\tthis->keys.keys[std::make_tuple(";
-        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        
+            //...for all elements
+        for (auto i = 0; i < rel.attributes.size(); i++)
         {
-            out << "this->" << rel.attributes[rel.primaryKey[i]].name << "()[tid]";
-            if(i != rel.primaryKey.size()-1)
-                out << ", ";
+            out << "\t\tstd::iter_swap(this->" << rel.attributes[i].name << "().begin()+tid, this->" << rel.attributes[i].name << "().end()-1);\n";
+            out << "\t\tthis->" << rel.attributes[i].name << "().pop_back();\n";    
         }
-        out << ")] = tid;\n";
-        out << "\n";
+       
+        if(!rel.primaryKey.empty())
+        {
+            out << "\n\t\tthis->keys.erase(std::make_tuple(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << rel.attributes[rel.primaryKey[i]].name;
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << "));\n";
+            //update tid of swapped entry
+            out << "\n\t\tthis->keys[std::make_tuple(";
+            for (auto i = 0; i < rel.primaryKey.size(); i++)
+            {
+                out << "this->" << rel.attributes[rel.primaryKey[i]].name << "()[tid]";
+                if(i != rel.primaryKey.size()-1)
+                    out << ", ";
+            }
+            out << ")] = tid;\n";
+            out << "\n";
+                
+        }
+        
+        //if nonPrimaryKey
+        if(!rel.nonPrimaryKey.empty())
+        {
+            //update swapped nonprimarykey
+            out << "\n\t\tauto iterpair2 = this->"<< rel.nonPrimaryKeyName << ".equal_range(std::make_tuple(";
+            //for every nonprimary key attribute
+            for(auto j = 0; j < rel.nonPrimaryKey.size(); j++)
+                {
+                    out << "std::get<" << rel.nonPrimaryKey[j] << ">(this->data)[tid]";
+                    if(j != rel.nonPrimaryKey.size()-1)
+                        out << ", ";
+                }
+            out << "));\n";
+            out << "\t\tauto it2 = iterpair2.first;\n        for (; it2 != iterpair2.second; ++it2) {\n            if (it2->second == this->size()) { \n                it2->second = tid;\n                break;\n            }\n        }\n";
             
+        }
+        
+        
         out << "\t}\n\n";
         
-        
+            
+        }
+                
         
       out << "};\n\n";
       
