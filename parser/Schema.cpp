@@ -206,11 +206,19 @@ std::string Schema::toCPP() const
    }
    
    out << "\t}\n\n";
+   
+   //printInfoTask1
+   out << "\tvoid printTask1Info(int numRepeat)\n\t{";
+   
+   out << "    std::cout << \"Database - ColumnStore\\n\" << std::endl;\n    std::cout << \"\\tNewOrder has \" << m_neworder.size() << \" rows!\" << std::endl;\n    std::cout << \"\\tOrder has \" << m_order.size() << \" rows!\" << std::endl;\n    std::cout << \"\\tOrderLine has \" << m_orderline.size() << \" rows!\\n\" << std::endl;\n ";
+   
+   out << "\t}\n\n";
+   
    //end of class DatabaseColumn
    out << "};\n\n";
    
    //print test main
-      out << "\n\nint main()\n{\n\twarehouse w{\"./task1/tpcc_warehouse.tbl\"};\n\tstd::cout << \"Warehouse size = \" << w.size() << std::endl;\n\n\treturn 0;\n}";
+      out << "\n\nint main()\n{\n\tDatabaseColumn db;\n\tdb.printTask1Info(1000000);\n\n\treturn 0;\n}";
    
    return out.str();
 }
