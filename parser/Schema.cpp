@@ -97,20 +97,29 @@ std::string Schema::toCPP() const
          */
         out << "\tvoid insert(";
         
-        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        
+        for (auto i = 0; i < rel.attributes.size(); i++)
         {
-         out << type(rel.attributes[rel.primaryKey[i]]) <<" " << rel.attributes[rel.primaryKey[i]].name;
-         if(i != rel.primaryKey.size()-1)
-             out << ", ";
+            out << type(rel.attributes[i]) << " " << rel.attributes[i].name;
+            if(i != rel.attributes.size()-1)
+                out << ", ";
+            
         }
-        out << ")\n\t{\n\t\tauto tid = this->size();\n\n";
-        //add to each column
+        out << ")\n\t{\n\t\tauto tid = this->size();\n\n\t\tif(this->keys.keys.count(std::make_tuple(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
-            out << "\t\tthis->" << rel.attributes[rel.primaryKey[i]].name << "().emplace_back(" << rel.attributes[rel.primaryKey[i]].name << ");\n"; ;
+            out << rel.attributes[rel.primaryKey[i]].name;
+            if(i != rel.primaryKey.size()-1)
+                out << ", ";
+        }        
+        out << ")) == 1)\n\t\t\tthrow std::invalid_argument(\"In relation " << rel.name << ": primary key already taken -> must be unique!\");\n\n";
+        //add to each column
+        for (auto i = 0; i < rel.attributes.size(); i++)
+        {
+            out << "\t\tthis->" << rel.attributes[i].name << "().emplace_back(" << rel.attributes[i].name << ");\n"; ;
         }
         
-        out << "\t\tthis->keys[std::make_tuple(";
+        out << "\n\t\tthis->keys[std::make_tuple(";
         for (auto i = 0; i < rel.primaryKey.size(); i++)
         {
             out << rel.attributes[rel.primaryKey[i]].name;
@@ -143,27 +152,42 @@ std::string Schema::toCPP() const
             //...for all elements
         for (auto i = 0; i < rel.attributes.size(); i++)
         {
-            out << "\t\tauto& tmp = this->" << rel.attributes[i].name << "();\n"; ;
-            out << "\t\tstd::iter_swap(tmp.begin()+tid, tmp.end()-1);\n";
-            out << "\t\ttmp.pop_back();\n";
-            out << "\t\tthis->keys.erase(std::make_tuple(";
-            for (auto i = 0; i < rel.primaryKey.size(); i++)
-            {
-                out << rel.attributes[rel.primaryKey[i]].name;
-                if(i != rel.primaryKey.size()-1)
-                    out << ", ";
-            }
-            out << "));\n";
-            out << "\n";
+            out << "\t\tstd::iter_swap(this->" << rel.attributes[i].name << "().begin()+tid, this->" << rel.attributes[i].name << "().end()-1);\n";
+            out << "\t\tthis->" << rel.attributes[i].name << "().pop_back();\n";    
         }
        
-        
-        out << "}\n\n";
+        out << "\n\t\tthis->keys.keys.erase(std::make_tuple(";
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+            out << rel.attributes[rel.primaryKey[i]].name;
+            if(i != rel.primaryKey.size()-1)
+                out << ", ";
+        }
+        out << "));\n";
+        out << "\n";
+    
+        //update tid of swapped entry
+        out << "\n\t\tthis->keys.keys[std::make_tuple(";
+        for (auto i = 0; i < rel.primaryKey.size(); i++)
+        {
+            out << "this->" << rel.attributes[rel.primaryKey[i]].name << "()[tid]";
+            if(i != rel.primaryKey.size()-1)
+                out << ", ";
+        }
+        out << ")] = tid;\n";
+        out << "\n";
+            
+        out << "\t}\n\n";
         
         
         
       out << "};\n\n";
+      
    }
+   
+   //print test main
+      out << "\n\nint main()\n{\n\twarehouse w{\"./task1/tpcc_warehouse.tbl\"};\n\tstd::cout << \"Warehouse size = \" << w.size() << std::endl;\n\n\treturn 0;\n}";
+   
    return out.str();
 }
 
