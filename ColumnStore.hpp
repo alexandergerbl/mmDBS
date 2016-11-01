@@ -111,7 +111,7 @@ struct ColumnStore {
         
         while(std::getline(in, line))
         {
-            char s [line.length()];
+            char s [line.length() + 1];
             strcpy(s, line.c_str());
             token = std::strtok(s, "|");        
             addRow<0, Types...>();
