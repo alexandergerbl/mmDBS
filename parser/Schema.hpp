@@ -31,6 +31,8 @@ struct Schema {
    std::vector<Schema::Relation> relations;
    std::string toString() const;
    
+   std::string toTestCase() const;
+   
    std::string toCPP() const;
 };
 #endif

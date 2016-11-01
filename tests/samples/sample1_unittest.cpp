@@ -182,7 +182,6 @@ TEST(DatabaseFind, Warehouse) {
   
   att_value = "2Xtbfe";
   Varchar<10> w_name_expected = Varchar<10>::build(att_value.c_str());
-  std::cout << "\n w_name = " << w_name << std::endl << "should be = " << w_name_expected << std::endl << std::endl;
   EXPECT_TRUE(w_name == w_name_expected );
   
   att_value = "XlZDbdUdAn6B9wq5qmzV";

@@ -45,6 +45,39 @@ std::string Schema::toString() const {
    return out.str();
 }
 
+
+std::string Schema::toTestCase() const
+{
+    std::stringstream out;
+    
+    for(const Schema::Relation& rel : relations)
+    {
+        out << std::endl;
+        out << "TEST(DatabaseFind, " << rel.name << ")\n{\n";
+        
+        out << "\t" << rel.name << " " << rel.name.substr(0, 2) << "{\"../../task1/tpcc_" << rel.name << ".tbl\"};\n";
+        
+        //TODO
+        
+        out << "}";
+        out << std::endl;
+    }
+    return out.str();
+}
+
+
+
+/*
+ * 
+ * 
+ * create cpp - code for schema
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
 std::string Schema::toCPP() const
 {
    std::stringstream out;  
