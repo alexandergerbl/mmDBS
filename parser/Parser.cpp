@@ -26,6 +26,7 @@ namespace literal {
    const char ParenthesisRight = ')';
    const char Comma = ',';
    const char Semicolon = ';';
+   const char QuotationMark = '\"';
 }
 
 std::unique_ptr<Schema> Parser::parse() {
@@ -101,6 +102,14 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             throw ParserError(line, "Expected 'TABLE' or 'INDEX', found '"+token+"'");
          break;
       case State::Table:
+          //std::string tmp;
+          if(tok[0] == literal::QuotationMark)
+          {
+                //tmp = token.substr(1, std::distance(token.begin(), token.end()) - 2);
+                state=State::TableName;
+                schema.relations.push_back(Schema::Relation(token.substr(1, std::distance(token.begin(), token.end()) - 2)));
+                break;
+          }
          if (isIdentifier(tok)) {
             state=State::TableName;
             schema.relations.push_back(Schema::Relation(token));
@@ -123,6 +132,21 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             state=State::On;
           break;
       case State::On:
+          if(tok[0] == literal::QuotationMark)
+          {
+                //tmp = token.substr(1, std::distance(token.begin(), token.end()) - 2);
+                state=State::IndexTableName;
+                
+                schema.relationName = tok.substr(1, std::distance(token.begin(), token.end()) - 2);
+            
+                //check whether table/relation exists
+                auto it_relation = std::find_if(schema.relations.begin(), schema.relations.end(), [&](auto const& r){ return (tok.substr(1, std::distance(token.begin(), token.end()) - 2) == r.name);});
+        
+                if(it_relation == schema.relations.end())
+                    throw ParserError(line, "'"+token+"' is not a TABLE ");
+                
+                break;
+          }
           if (isIdentifier(tok)) {
             state=State::IndexTableName;
             
@@ -147,6 +171,9 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
       case State::NonPrimaryKeyStart:
           //KeyListBegin adjust
           //same as key but for non-primaryKey
+    
+          
+          
           if (isIdentifier(tok)) {
             struct AttributeNamePredicate {
                const std::string& name;
