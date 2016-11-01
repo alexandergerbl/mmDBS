@@ -44,16 +44,12 @@
 // Don't forget gtest.h, which declares the testing framework.
 
 #include <limits.h>
+#include <string>
+#include <cstdint>
+#include <iostream>
 
-#include "Customer.hpp"
-#include "District.hpp"
-#include "History.hpp"
-#include "Item.hpp"
-#include "NewOrder.hpp"
-#include "Order.hpp"
-#include "OrderLine.hpp"
-#include "Stock.hpp"
-#include "Warehouse.hpp"
+#include "Types.hpp"
+#include "generatedSchema.cpp"
 
 #include "tests/include/gtest/gtest.h"
 
@@ -83,73 +79,139 @@
 // </TechnicalDetails>
 
 
-// Tests Database().
+/*
+ *
+ * Tests Database() Import data
+ * 
+ */
 
-TEST(DatabaseTest, CustomerImport)
+TEST(DatabaseImport, Customer)
 {
-	Customer w{"../../task1/tpcc_customer.tbl"};
+	customer c{"../../task1/tpcc_customer.tbl"};
 
-	EXPECT_EQ(150000, w.rows.size());
+	EXPECT_EQ(150000, c.size());
 }
 
-TEST(DatabaseTest, DistrictImport)
+TEST(DatabaseImport, District)
 {
-	District d{"../../task1/tpcc_district.tbl"};
+	district d{"../../task1/tpcc_district.tbl"};
 
-	EXPECT_EQ(50, d.rows.size());
+	EXPECT_EQ(50, d.size());
 }
 
-TEST(DatabaseTest, HistoryImport)
+TEST(DatabaseImport, History)
 {
-	History h{"../../task1/tpcc_history.tbl"};
+	history h{"../../task1/tpcc_history.tbl"};
 
-	EXPECT_EQ(150000, h.rows.size());
+	EXPECT_EQ(150000, h.size());
 }
 
-TEST(DatabaseTest, ItemImport)
+TEST(DatabaseImport, Item)
 {
-	Item i{"../../task1/tpcc_item.tbl"};
+	item i{"../../task1/tpcc_item.tbl"};
 
-	EXPECT_EQ(100000, i.rows.size());
+	EXPECT_EQ(100000, i.size());
 }
 
-TEST(DatabaseTest, NewOrderImport)
+TEST(DatabaseImport, NewOrder)
 {
-	NewOrder no{"../../task1/tpcc_neworder.tbl"};
+	neworder no{"../../task1/tpcc_neworder.tbl"};
 
-	EXPECT_EQ(45000, no.rows.size());
+	EXPECT_EQ(45000, no.size());
 }
 
 
-TEST(DatabaseTest, OrderImport)
+TEST(DatabaseImport, Order)
 {
-	Order o{"../../task1/tpcc_order.tbl"};
+	order o{"../../task1/tpcc_order.tbl"};
 
-	EXPECT_EQ(150000, o.rows.size());
+	EXPECT_EQ(150000, o.size());
 }
 
-TEST(DatabaseTest, OrderLineImport)
+TEST(DatabaseImport, OrderLine)
 {
-	OrderLine ol{"../../task1/tpcc_orderline.tbl"};
+	orderline ol{"../../task1/tpcc_orderline.tbl"};
 
-	EXPECT_EQ(1425564, ol.rows.size());
+	EXPECT_EQ(1425564, ol.size());
 }
 
-TEST(DatabaseTest, StockImport)
+TEST(DatabaseImport, Stock)
 {
-	Stock s{"../../task1/tpcc_stock.tbl"};
+	stock s{"../../task1/tpcc_stock.tbl"};
 
-	EXPECT_EQ(500000, s.rows.size());
+	EXPECT_EQ(500000, s.size());
 }
 
-TEST(DatabaseTest, WarehouseImport) {
+TEST(DatabaseImport, Warehouse) {
   // This test is named "Negative", and belongs to the "FactorialTest"
   // test case.
-  Warehouse w{"../../task1/tpcc_warehouse.tbl"};
+  warehouse w{"../../task1/tpcc_warehouse.tbl"};
 
-  EXPECT_EQ(5, w.rows.size());
+  EXPECT_EQ(5, w.size());
 }
 
+
+/*
+ * Primary key access for all tables
+ * 
+ */
+
+TEST(DatabaseFind, Warehouse) {
+  // This test is named "Negative", and belongs to the "FactorialTest"
+  // test case.
+  warehouse w{"../../task1/tpcc_warehouse.tbl"};
+
+  Integer w_id{1};
+  
+  Tid tid = w.find(w_id);
+  
+  //actual values
+  Varchar<10> w_name = w.w_name()[tid];
+  Varchar<20> w_street_1 = w.w_street_1()[tid];
+  Varchar<20> w_street_2 = w.w_street_2()[tid];
+  Varchar<20> w_city = w.w_city()[tid];
+  Char<2> w_state = w.w_state()[tid];
+  Char<9> w_zip = w.w_zip()[tid];
+  Numeric<4, 4> w_tax = w.w_tax()[tid];
+  Numeric<12, 2> w_ytd = w.w_ytd()[tid];
+  
+  //expected values
+  std::string att_value = "2Xtbfe";
+  Varchar<10> w_name_expected = Varchar<10>::build(att_value.c_str());
+  ASSERT_TRUE(w_name == w_name_expected );
+  
+  att_value = "XlZDbdUdAn6B9wq5qmzV";
+  Varchar<20> w_street_1_expected = Varchar<20>::build(att_value.c_str());;
+  ASSERT_TRUE(w_street_1 == w_street_1_expected );
+  
+  att_value= "8SGj3S1diu";
+  Varchar<20> w_street_2_expected = Varchar<20>::build(att_value.c_str());;
+  ASSERT_TRUE(w_street_2 == w_street_2_expected );
+  
+  att_value = "qFlC5kZz3Rk";
+  Varchar<20> w_city_expected = Varchar<20>::build(att_value.c_str());;
+  ASSERT_TRUE(w_city == w_city_expected );
+  
+  att_value = "Nb";
+  Char<2> w_state_expected = Char<2>::build(att_value.c_str());;
+ASSERT_TRUE(w_state == w_state_expected );
+
+  att_value = "657611111";
+  Char<9> w_zip_expected = Char<9>::build(att_value.c_str());
+  ASSERT_TRUE(w_zip == w_zip_expected );
+  
+  att_value = ".1923";
+  Numeric<4, 4> w_tax_expected = Numeric<4,4>::castString (att_value.c_str(), att_value.length());
+  
+  auto a = w_tax.value;
+  auto b = w_tax_expected.value;
+  
+  ASSERT_TRUE(a == b );
+  
+  att_value = "3000000.00";
+  Numeric<12, 2> w_ytd_expected = Numeric<12,2>::castString (att_value.c_str(), att_value.length());
+  EXPECT_TRUE(w_ytd == w_ytd_expected );  
+}
 
 
 // Step 3. Call RUN_ALL_TESTS() in main().
