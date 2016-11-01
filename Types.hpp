@@ -527,7 +527,7 @@ template<typename T>
 inline auto readAttribute(std::string att_value)
 {
   static_assert(sizeof(T) == 0, "Read used for unhandled type!\n");
-};
+}
 
 template<>
 inline auto readAttribute<Integer>(std::string att_value)
