@@ -441,13 +441,6 @@ std::string Schema::toCPP() const
    //end of class DatabaseColumn
    out << "};\n\n";
    
-   
-    
-   /*
-    * print test main
-    */
-   out << "\n\nint main()\n{\n\tDatabaseColumn db;\n\tdb.printTask2Info(1000000);\n\n\treturn 0;\n}";
-   
    return out.str();
 }
 
