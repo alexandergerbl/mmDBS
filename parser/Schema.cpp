@@ -115,7 +115,7 @@ std::string Schema::toCPP() const
       
       //load PrimaryKey
         out << "public:\n\t" << rel.name << "(std::string file) : ColumnStore(file)\n\t{\n";
-        if(!rel.nonPrimaryKey.empty())
+        if(!rel.primaryKey.empty())
         {
             out << "\t\tfor(auto i = 0; i < this->size(); i++)\n\t\t{\n";
             //read all nonPrimaryKey attributes from row i 

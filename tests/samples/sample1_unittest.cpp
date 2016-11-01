@@ -157,7 +157,6 @@ TEST(DatabaseImport, Warehouse) {
  */
 
 TEST(DatabaseFind, Warehouse) {
-  // This test is named "Negative", and belongs to the "FactorialTest"
   // test case.
   warehouse w{"../../task1/tpcc_warehouse.tbl"};
 
@@ -176,29 +175,35 @@ TEST(DatabaseFind, Warehouse) {
   Numeric<12, 2> w_ytd = w.w_ytd()[tid];
   
   //expected values
-  std::string att_value = "2Xtbfe";
+  
+  std::string att_value = "1";
+  Integer w_id_expected = Integer::castString(att_value.c_str(), att_value.length());
+  EXPECT_TRUE(w_id == w_id_expected );
+  
+  att_value = "2Xtbfe";
   Varchar<10> w_name_expected = Varchar<10>::build(att_value.c_str());
-  ASSERT_TRUE(w_name == w_name_expected );
+  std::cout << "\n w_name = " << w_name << std::endl << "should be = " << w_name_expected << std::endl << std::endl;
+  EXPECT_TRUE(w_name == w_name_expected );
   
   att_value = "XlZDbdUdAn6B9wq5qmzV";
   Varchar<20> w_street_1_expected = Varchar<20>::build(att_value.c_str());;
-  ASSERT_TRUE(w_street_1 == w_street_1_expected );
+  EXPECT_TRUE(w_street_1 == w_street_1_expected );
   
   att_value= "8SGj3S1diu";
   Varchar<20> w_street_2_expected = Varchar<20>::build(att_value.c_str());;
-  ASSERT_TRUE(w_street_2 == w_street_2_expected );
+  EXPECT_TRUE(w_street_2 == w_street_2_expected );
   
   att_value = "qFlC5kZz3Rk";
   Varchar<20> w_city_expected = Varchar<20>::build(att_value.c_str());;
-  ASSERT_TRUE(w_city == w_city_expected );
+  EXPECT_TRUE(w_city == w_city_expected );
   
   att_value = "Nb";
   Char<2> w_state_expected = Char<2>::build(att_value.c_str());;
-ASSERT_TRUE(w_state == w_state_expected );
+EXPECT_TRUE(w_state == w_state_expected );
 
   att_value = "657611111";
   Char<9> w_zip_expected = Char<9>::build(att_value.c_str());
-  ASSERT_TRUE(w_zip == w_zip_expected );
+  EXPECT_TRUE(w_zip == w_zip_expected );
   
   att_value = ".1923";
   Numeric<4, 4> w_tax_expected = Numeric<4,4>::castString (att_value.c_str(), att_value.length());
@@ -206,7 +211,7 @@ ASSERT_TRUE(w_state == w_state_expected );
   auto a = w_tax.value;
   auto b = w_tax_expected.value;
   
-  ASSERT_TRUE(a == b );
+  EXPECT_TRUE(a == b );
   
   att_value = "3000000.00";
   Numeric<12, 2> w_ytd_expected = Numeric<12,2>::castString (att_value.c_str(), att_value.length());
