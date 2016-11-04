@@ -43,7 +43,6 @@ Numeric<12, 2> hashJoin(DatabaseColumn& db)
             resultJoin1.emplace(std::make_tuple(o_id, o_d_id, o_w_id), std::make_pair(tid_customer_it->second.first, tid)); 
         }
     }
-    std::cout << "FirstJoinSize = " << resultJoin1.size() << std::endl;
     
     //second join
     Numeric<12, 2> sum{0};
@@ -59,15 +58,13 @@ Numeric<12, 2> hashJoin(DatabaseColumn& db)
         
         if(resultJoin1.end() != search)
         {
-            //if(db.m_orderline.ol_o_id()[ol_tid] == db.m_order.o_id()[it->second.second])
-            
                 // sum += ol_quality * ol_amount - c_balance*o_ol_cnt
                 auto a = db.m_orderline.ol_quantity()[ol_tid].castP2().castS<12>() * db.m_orderline.ol_amount()[ol_tid].castS<12>();
                 auto b = db.m_customer.c_balance()[search->second.first] * db.m_order.o_ol_cnt()[search->second.second].castS<12>().castP2();
              
                 sum = sum + a.castM2<12>() - b.castM2<12>();
             
-        }     //check for all tids, whether ol_o_id == o_id
+        }
      
     }
 
