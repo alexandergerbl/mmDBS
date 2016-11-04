@@ -5,7 +5,7 @@
 #include <tuple>
 #include <utility>
 
-void hashJoin(DatabaseColumn& db)
+Numeric<12, 2> hashJoin(DatabaseColumn& db)
 {
     
     std::map<std::tuple<Integer, Integer, Integer>, Tid> customer_HT;
@@ -65,7 +65,7 @@ void hashJoin(DatabaseColumn& db)
         }
         
     }
-    std::cout << "SUM = " << sum << std::endl;
+    return sum;
 }
 
 int main()
@@ -73,9 +73,26 @@ int main()
  
 	DatabaseColumn db;
     
-    hashJoin(db);
+    int numRepeat = 10;
     
-	//db.printTask2Info(1000000);
+    //auto result = hashJoin(db);
+    
+    std::cout << "Database - ColumnStore - task 3\n" << std::endl;
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    
+    for(auto i = 0; i < numRepeat; i++)
+    {
+        start = std::chrono::system_clock::now();
+    
+        auto result = hashJoin(db);
+        
+        end = std::chrono::system_clock::now();
+        std::cout << i << "\t" << result << "\t" << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " µs/hashjoin\n" << std::endl;
+    }
+    
+
+    
+
 
     return 0;   
 }
