@@ -8,7 +8,7 @@
 Numeric<12, 2> hashJoin(DatabaseColumn& db)
 {
     
-    std::map<std::tuple<Integer, Integer, Integer>, Tid> customer_HT;
+    std::map<std::tuple<Integer, Integer, Integer>, std::pair<Tid, Tid>> customer_HT;
     
     for(auto tid = 0; tid < db.m_customer.size(); tid++)
     {
@@ -20,12 +20,12 @@ Numeric<12, 2> hashJoin(DatabaseColumn& db)
             auto c_d_id = db.m_customer.c_d_id()[tid];
             auto c_w_id = db.m_customer.c_w_id()[tid];
             
-            customer_HT.emplace(std::make_tuple(c_d_id, c_w_id, c_id), tid);
+            customer_HT.emplace(std::make_tuple(c_d_id, c_w_id, c_id), std::make_pair(tid, 0));
         }
     }
     
     //std::pair<tid of customer, tid of order>
-    std::unordered_map<Tid, Tid> result_join1;
+    
     
     for(auto tid = 0; tid < db.m_order.size(); tid++)
     {
@@ -36,7 +36,8 @@ Numeric<12, 2> hashJoin(DatabaseColumn& db)
         auto tid_customer_it = customer_HT.find(std::make_tuple(o_d_id, o_w_id, o_c_id));
         
         if(tid_customer_it != customer_HT.end())
-            result_join1.emplace(tid_customer_it->second, tid);
+            tid_customer_it->second.second = tid; 
+            //result_join1.emplace(tid_customer_it->second, tid);
     }
     
     //second join
@@ -54,11 +55,11 @@ Numeric<12, 2> hashJoin(DatabaseColumn& db)
         for(auto it = start; it != end; it++)
         {
             //check for all tids, whether ol_o_id == o_id
-            if(db.m_orderline.ol_o_id()[ol_tid] == db.m_order.o_id()[result_join1[it->second]])
+            if(db.m_orderline.ol_o_id()[ol_tid] == db.m_order.o_id()[it->second.second])
             {
                 // sum += ol_quality * ol_amount - c_balance*o_ol_cnt
                 auto a = db.m_orderline.ol_quantity()[ol_tid].castP2().castS<12>() * db.m_orderline.ol_amount()[ol_tid].castS<12>();
-                auto b = db.m_customer.c_balance()[it->second] * db.m_order.o_ol_cnt()[result_join1[it->second]].castS<12>().castP2();
+                auto b = db.m_customer.c_balance()[it->second.first] * db.m_order.o_ol_cnt()[it->second.second].castS<12>().castP2();
              
                 sum = sum + a.castM2<12>() - b.castM2<12>();
             }
@@ -73,7 +74,7 @@ int main()
  
 	DatabaseColumn db;
     
-    int numRepeat = 10;
+    int numRepeat = 1;
     
     //auto result = hashJoin(db);
     
