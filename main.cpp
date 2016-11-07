@@ -7,14 +7,13 @@
 
 
 
-void test_fork(DatabaseColumn& db)
-{
-    //
-}
+
 
 int main()
 {
 	DatabaseColumn db;
+    
+    //db.printInfoTask3();
     
     db.printInfoTask3();
     

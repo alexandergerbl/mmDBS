@@ -82,7 +82,7 @@ std::string Schema::toCPP() const
 {
    std::stringstream out;  
    //header
-   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n#include<map>\n#include <utility>\n#include <iterator>\n\n";
+   out << "#include \"ColumnStore.hpp\"\n#include <cstdlib>\n#include <tuple>\n#include<chrono>\n#include<cmath>\n#include<map>\n#include <utility>\n#include <iterator>\n#include <atomic>\n#include <iostream>\n#include <signal.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n";
    
    for (const Schema::Relation& rel : relations) {
       out << "class " << rel.name << " : public ColumnStore<";
@@ -381,6 +381,10 @@ std::string Schema::toCPP() const
       
    }
    
+   
+   out << "\tstatic std::atomic<bool> childRunning_local;\t\t\n\t\t\t\n\tstatic void SIGCHLD_handler(int /*sig*/) {\t\t\n\t   int status;\t\t\n\t   pid_t childPid=wait(&status);\t\t\n\t   // now the child with process id childPid is dead\t\t\n\t   childRunning_local=false;\t\t\n\t}";
+   
+   
    /*
     * 
     * 
@@ -477,12 +481,25 @@ std::string Schema::toCPP() const
     */
    out << "    Numeric<12, 2> hashJoinTask3()\n    {       \n        \n        std::unordered_map<std::tuple<Integer, Integer, Integer>, std::pair<Tid, Tid>, IntIntIntHash> customer_HT;\n        \n        for(auto tid = 0; tid < m_customer.size(); tid++)\n        {\n            auto c_last_tmp = m_customer.c_last()[tid];\n            \n            if(c_last_tmp.value[0] == 'B')\n            {\n                auto c_id = m_customer.c_id()[tid];\n                auto c_d_id = m_customer.c_d_id()[tid];\n                auto c_w_id = m_customer.c_w_id()[tid];\n                \n                customer_HT.emplace(std::make_tuple(c_d_id, c_w_id, c_id), std::make_pair(tid, 0));\n            }\n        }\n        \n        \n            //std::pair<tid of customer, tid of order>\n        std::unordered_map<std::tuple<Integer, Integer, Integer>, std::pair<Tid, Tid>, IntIntIntHash> resultJoin1;    \n        \n        for(auto tid = 0; tid < m_order.size(); tid++)\n        {\n            auto o_c_id = m_order.o_c_id()[tid];\n            auto o_d_id = m_order.o_d_id()[tid];\n            auto o_w_id = m_order.o_w_id()[tid];\n            auto o_id = m_order.o_id()[tid];\n            \n            auto tid_customer_it = customer_HT.find(std::make_tuple(o_d_id, o_w_id, o_c_id));\n            \n            if(tid_customer_it != customer_HT.end())\n            {\n                resultJoin1.emplace(std::make_tuple(o_id, o_d_id, o_w_id), std::make_pair(tid_customer_it->second.first, tid)); \n            }\n        }\n        \n        //second join\n        Numeric<12, 2> sum{0};\n        \n        for(auto ol_tid = 0; ol_tid < m_orderline.size(); ol_tid++)\n        {\n            //get range of possible fitting keys\n            auto o_id = m_orderline.ol_o_id()[ol_tid];\n            auto o_d_id = m_orderline.ol_d_id()[ol_tid];\n            auto o_w_id = m_orderline.ol_w_id()[ol_tid];\n            \n            auto search = resultJoin1.find(std::make_tuple(o_id, o_d_id, o_w_id));\n            \n            if(resultJoin1.end() != search)\n            {\n                    // sum += ol_quality * ol_amount - c_balance*o_ol_cnt\n                    auto a = m_orderline.ol_quantity()[ol_tid].castP2().castS<12>() * m_orderline.ol_amount()[ol_tid].castS<12>();\n                    auto b = m_customer.c_balance()[search->second.first] * m_order.o_ol_cnt()[search->second.second].castS<12>().castP2();\n                \n                    sum = sum + a.castM2<12>() - b.castM2<12>();\n            }\n        \n        }\n        return sum;\n    }\n";
    
+   
+   
+   /*
+    * Fork - task3 - hashjoin - Snapshot Model
+    * 
+    * 
+    */
+   out << "\n    int fork_task3_hashjoin()\n    {\n            struct sigaction sa;\n            sigemptyset(&sa.sa_mask);\n            sa.sa_flags=0;\n            sa.sa_handler=SIGCHLD_handler;\n            sigaction(SIGCHLD,&sa,NULL);\n\n            int numTA = 1000000;\n            \n            std::chrono::time_point<std::chrono::system_clock> start, end;\n            \n            int64_t fork_avg = 0;\n            int64_t numFork = 0;\n            \n            \n            int fd[2];\n            pipe(fd);\n            int query_avg = 0;\n            int numQueries = 0;\n            \n            int TA_time = 0;\n            \n            bool finishedTA = false;\n    \t    thread_local int ka = 0;        \n            while(!finishedTA) \n            {\n                childRunning_local=true;\n                \n                start = std::chrono::system_clock::now();\n                pid_t pid=fork();\n                end = std::chrono::system_clock::now();\n                \n                fork_avg += std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();\n                numFork++;\n                \n                numQueries++;\n                \n                start = std::chrono::system_clock::now();\n                if (pid) { // parent\n                    //exec 1 mio transaction\n                    while(ka < numTA)\n                    {\n                        if(!childRunning_local)\n                        {\n                            //reading only\n                            close(fd[1]);\n                            decltype(std::chrono::duration_cast<std::chrono::microseconds>(end-start).count()) val; \n                            read(fd[0], &val, sizeof(val));\n                            \n                            query_avg += val;\n                            \n                            break;\n                        }\n                        oltp(Timestamp{static_cast<uint64_t>( 40+ka)}, 1+(ka%5));\n                        \n                        ka++;\n                        \n                            \n                    }\n                    \n                    if(ka >= numTA)\n                        finishedTA = true;\n                } else { // forked child\n                    //only writing -> close read descriptor\n                    close(fd[0]);\n                    \n                    \n                    //start hashJoinTask3 - Query\n                    start = std::chrono::system_clock::now();\n                    this->hashJoinTask3();\n                    end = std::chrono::system_clock::now();\n                    auto val = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();\n                    \n                    write(fd[1], &val, sizeof(val));\n                    \n                    //close write descriptor\n                    close(fd[1]);\n                    \n                    return 0;\n                    // child is finished\n                }\n                end = std::chrono::system_clock::now();\n                TA_time += std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();\n            }\n            \n            //PRINT RESULT\n            std::cout << \"\\t\" << ((double)numTA*1000000)/TA_time << \" TA/sec\" << std::endl;\n            std::cout << \"\\t\" << (int)((double)query_avg)/numQueries << \"µs per query\" << std::endl;\n            std::cout << \"\\t\" << fork_avg/numFork << \"µs per fork\" << std::endl;\n\n    }";
+   
+   
+   
    /*
     * 
     * printInfoTask3
     * 
     */
-   out << "void printInfoTask3()\n{\n       int numRepeat = 10;\n    \n    //auto result = hashJoinTask3(db);\n    \n    std::cout << \"Database - ColumnStore - task 3\\n\" << std::endl;\n    std::chrono::time_point<std::chrono::system_clock> start, end;\n    \n    for(auto i = 0; i < numRepeat; i++)\n    {\n        start = std::chrono::system_clock::now();\n    \n        auto result = hashJoinTask3();\n        \n        end = std::chrono::system_clock::now();\n        std::cout << i << \"\\t\" << result << \"\\t\" << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << \" µs/hashjoin\\n\" << std::endl;\n    }\n}\n";
+   out << "\n\tvoid printInfoTask3()\n    {\n        int numRepeat = 10;\n        \n        //auto result = hashJoinTask3(db);\n        \n        std::cout << \"Database - ColumnStore - task 3\\n\" << std::endl;\n        std::chrono::time_point<std::chrono::system_clock> start, end;\n        \n        for(auto i = 0; i < numRepeat; i++)\n        {\n            start = std::chrono::system_clock::now();\n        \n            auto result = hashJoinTask3();\n            \n            end = std::chrono::system_clock::now();\n            std::cout << (i+1) << \"\\t\" << result << \"\\t\" << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << \" µs/hashjoin\" << std::endl;\n        }\n        std::cout << \"\\nSnapshotting - Measurements\" << std::endl;\n        \n        fork_task3_hashjoin();\n        \n    }";
+   
+   
    
    //end of class DatabaseColumn
    out << "};\n\n";
