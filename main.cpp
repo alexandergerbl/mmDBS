@@ -16,6 +16,11 @@ public:
     virtual void consume(std::shared_ptr<AlgebraOperator> curr) = 0;
 };
 
+struct clause
+{
+   std::string attribute;
+   std::string value;
+};
 
 /*
  * 
@@ -111,8 +116,9 @@ public:
     std::shared_ptr<AlgebraOperator> input;
     std::weak_ptr<AlgebraOperator> parent;
     
-
-    Selection(std::shared_ptr<AlgebraOperator> input) : input{input} {}
+    std::vector<clause> clauses;
+    
+    Selection(std::shared_ptr<AlgebraOperator> input, std::vector<clause> clauses) : input{input}, clauses{clauses} {}
     
     void produce(std::shared_ptr<AlgebraOperator> parent) override
     {
@@ -121,7 +127,16 @@ public:
     }
     void consume(std::shared_ptr<AlgebraOperator> curr) override
     {
-        std::cout << "if(p(t))\n--{" << std::endl;
+        std::cout << "if(";
+        
+        for(int i = 0; i < this->clauses.size(); i++)
+        {
+                std::cout << this->clauses[i].attribute << " = " << this->clauses[i].value;
+                if(i < this->clauses.size()-1)
+                    std::cout << " && ";
+        }
+        
+        std::cout << ")\n--{" << std::endl;
         if(auto sp_parent = parent.lock())
             sp_parent->consume(shared_from_this());
         std::cout << "\n--}" << std::endl;
@@ -162,7 +177,8 @@ void printTableScan()
 {
     auto tablescanLeft = std::make_shared<TableScan>();
     
-    auto select = std::make_shared<Selection>(tablescanLeft);
+    std::vector<clause> clauses = {{"w_id", "5"}};
+    auto select = std::make_shared<Selection>(tablescanLeft, clauses);
     
     auto tablescanRight = std::make_shared<TableScan>();
     //auto select2 = std::make_shared<Selection>(tablescanRight);
