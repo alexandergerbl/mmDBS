@@ -16,6 +16,17 @@ public:
     virtual void consume(std::shared_ptr<AlgebraOperator> curr) = 0;
 };
 
+//global next free id
+auto iu = 0;
+
+/*
+ * stores which attributes are important
+ */
+struct Context
+{
+    
+};
+
 struct clause
 {
    std::string attribute;
@@ -36,6 +47,8 @@ public:
     std::shared_ptr<AlgebraOperator> right;
     
     std::weak_ptr<AlgebraOperator> parent;
+    
+    
     
     HashJoin(std::shared_ptr<AlgebraOperator> left, std::shared_ptr<AlgebraOperator> right) : left{left}, right{right} {}
     
@@ -195,11 +208,41 @@ void printTableScan()
 
 int main()
 {
-	//DatabaseColumn db;
-    
+	DatabaseColumn db;
+  
+    std::unordered_multimap<std::tuple<Integer, Integer, Integer>, std::tuple<Varchar<16>, Varchar<16>, Numeric<1, 0>>, IntIntIntHash> join_m_order_m_orderline_HT;
+    std::unordered_multimap<std::tuple<Integer, Integer, Integer>, Tid, IntIntIntHash> join_m_customer_m_order_HT;
+    for(auto tid = 0; tid < db.m_customer.size(); tid++)
+    {
+        if(db.m_customer.c_d_id()[tid] == 1 && db.m_customer.c_w_id()[tid] == 1 && db.m_customer.c_id()[tid] == 322)
+        {
+            join_m_customer_m_order_HT.emplace(std::make_tuple(db.m_customer.c_w_id()[tid], db.m_customer.c_d_id()[tid], db.m_customer.c_id()[tid]), tid);
+        }
+    }
+
+    for(auto tid = 0; tid < db.m_order.size(); tid++)
+    {
+        auto range = join_m_customer_m_order_HT.equal_range(std::make_tuple(db.m_order.o_w_id()[tid], db.m_order.o_d_id()[tid], db.m_order.o_c_id()[tid]));
+        for(auto it = range.first; it != range.second; ++it)
+        {
+            join_m_order_m_orderline_HT.emplace(std::make_tuple(db.m_order.o_w_id()[tid], db.m_order.o_d_id()[tid], db.m_order.o_id()[tid]), std::make_tuple(db.m_customer.c_first()[it->second], db.m_customer.c_last()[it->second], db.m_order.o_all_local()[tid]));
+        }
+
+    }
+
+    for(auto tid = 0; tid < db.m_orderline.size(); tid++)
+    {
+        auto range = join_m_order_m_orderline_HT.equal_range(std::make_tuple(db.m_orderline.ol_w_id()[tid], db.m_orderline.ol_d_id()[tid], db.m_orderline.ol_o_id()[tid]));
+        for(auto it = range.first; it != range.second; ++it)
+        {
+                std::cout << std::get<0>(it->second) << " " << std::get<1>(it->second) << " " << std::get<2>(it->second) << " " << db.m_orderline.ol_amount()[tid] << " " << std::endl;
+        }
+
+    }
+
     //db.printInfoTask3();
     
-    printTableScan();
+    //printTableScan();
     
     return 0;   
 }

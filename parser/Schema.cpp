@@ -400,7 +400,25 @@ std::string Schema::toCPP() const
    out << std::endl << "const int32_t warehouses=5;";
    out << std::endl << std::endl;
    //Constructor
-   out << "\tDatabaseColumn(){};\n\n";
+   out << "\tDatabaseColumn(){\n";
+   
+   
+   out << "std::map<std::tuple<std::string, std::string>, int> getTableIndex;" << std::endl;
+   //HashMap that maps <table_name, attribute_name> -> index within table of attribute
+   for(auto& rel: relations)
+   {
+       int index_generator = 0;
+        for(auto& attr : rel.attributes)
+        {
+            out << "\tgetTableIndex.emplace(std::make_tuple<std::string, std::string>(";
+            out << "\"" << rel.name << "\", \"" << attr.name << "\"";
+            out << "), " << index_generator << " );" << std::endl;
+            index_generator++;
+        }
+   }
+   
+   
+    out << "\t};\n\n";
    
    
    /*
@@ -503,6 +521,9 @@ std::string Schema::toCPP() const
    
    //end of class DatabaseColumn
    out << "};\n\n";
+   
+   
+   
    
    return out.str();
 }
