@@ -6,6 +6,7 @@
 #include <memory>
 #include <fstream>
 #include <sstream>
+#include <set>
 #include <iostream>
 
 #include "./parser/Schema.hpp"
@@ -36,6 +37,8 @@ struct QueryParser {
    std::vector<std::string> selectedAttributes;
    std::vector<Clause> whereClauses;
    
+   std::set<std::string> tables;
+   
    QueryParser() : state(State::Init)
    {
     SchemaParser::Parser p("./task1/schema.sql");
@@ -53,6 +56,8 @@ struct QueryParser {
    ~QueryParser() {};
    std::unique_ptr<SQL::Schema> parse(std::string const& query);
 
+   std::string generateCPP() const;
+   
    private:
        //returns true if query ended ";"
    void nextToken(unsigned line, const std::string& token, SQL::Schema& s);

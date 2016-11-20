@@ -5,7 +5,7 @@
 
 namespace SQL
 {
-
+/*
 static std::string type(const Schema::Relation::Attribute& attr) {
    SchemaParser::Types::Tag type = attr.type;
    switch(type) {
@@ -30,7 +30,7 @@ static std::string type(const Schema::Relation::Attribute& attr) {
       }
    }
    throw;
-}
+}*/
 
 std::string Schema::toString() const {
    std::stringstream out;  
@@ -577,4 +577,16 @@ std::string Schema::getTableName(std::string attribute) const
 }
 
 
+Schema::Relation::Attribute Schema::getAttribute(std::string attribute) const
+{
+    for(auto const& rel : this->relations)
+    {
+        for(auto const& curr_attr : rel.attributes)
+            if(curr_attr.name == attribute)
+                return curr_attr;
+    }
+    return Schema::Relation::Attribute();
 }
+
+}
+

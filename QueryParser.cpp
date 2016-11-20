@@ -1,4 +1,5 @@
 #include "QueryParser.hpp"
+#include "parser/Schema.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -30,7 +31,7 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
       //TODO
        auto it = token.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890");
        auto tmp = token.substr(0, it);
-       std::cout << tmp << std::endl;
+       
        nextToken(line, tmp, *s);
        if(token.size() > it)
            token.erase(0, it+1);
@@ -110,6 +111,7 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
               if(this->schema->isTableName(tok))
               {
                   //nothing to do, just check whether table exists
+                  this->tables.insert(tok);
                   state=State::TableName;
               }
               else
@@ -191,5 +193,49 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
    }
 }
 
+std::string QueryParser::generateCPP() const
+{
+    //TODO
+    std::stringstream out;
+    
+    for(auto it = this->tables.begin(); it != this->tables.end(); it++)
+    {
+        out << "std::vector<Attribute> attributes_" << (*it) << " = {";
+        
+        //get all attributes and print e.g. {"m_customer", "c_id", "Integer"}
+        for(auto i = 0; i < this->schema->relations.size(); i++)
+        {
+            if(this->schema->relations[i].name == (*it))
+            {
+                for(auto ii = 0; ii < this->schema->relations[i].attributes.size(); ii++)
+                {
+                    out << "{\"m_" << this->schema->relations[i].name << "\", \"" << this->schema->relations[i].attributes[ii].name << "\", \"" << SQL::type(this->schema->relations[i].attributes[ii]) << "\"}";
+                    if(ii < this->schema->relations[i].attributes.size()-1)
+                        out << ", ";
+                }
+                out << "auto " << this->schema->relations[i].name << " = std::make_shared<TableScan>(m_" << this->schema->relations[i].name << ", attributes_" << this->schema->relations[i].name << ");";
+                std::cout << std::endl;
+            }
+        }
+        
+        out << "};";
+    }
+    
+    out << "\n\n//what attributes to print\n";
+    out << "std::vector<Attribute> print_attributes = {";
+    for(auto const& attr : this->selectedAttributes)
+    {
+        out << "{\"m_" << this->schema->getTableName(attr) << "\", \"" << attr << "\", \"" << SQL::type(this->schema->getAttribute(attr)) << "\"}";
+    }
+    out << "};\n";
+    out << "auto root = std::make_shared<Print>(";
+    out << "warehouse";
+    out << ", print_attributes";
+    out << ");\nroot->setParent(nullptr);\nroot->produce(std::shared_ptr<AlgebraOperator>(nullptr));\n";
+    
+    return out.str();
+}
 
 }
+
+
