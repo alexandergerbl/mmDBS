@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <sstream>
 
+namespace SchemaParser{
+
 /**
  * Types
  */
@@ -104,6 +106,8 @@ struct Numeric {
 template <unsigned len1, unsigned len2>
 Numeric<len1,len2>::Numeric(uint64_t pre, uint64_t decimal) {
    data = decimal + std::pow(10, len2)*pre;
+}
+
 }
 
 #endif

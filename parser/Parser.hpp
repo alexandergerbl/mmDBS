@@ -8,6 +8,8 @@
 #include <sstream>
 #include "Schema.hpp"
 
+namespace SchemaParser{
+
 class ParserError : std::exception {
    std::string msg;
    unsigned line;
@@ -26,10 +28,11 @@ struct Parser {
    State state;
    Parser(const std::string& fileName) : fileName(fileName), state(State::Init) {}
    ~Parser() {};
-   std::unique_ptr<Schema> parse();
+   std::unique_ptr<SQL::Schema> parse();
 
    private:
-   void nextToken(unsigned line, const std::string& token, Schema& s);
+   void nextToken(unsigned line, const std::string& token, SQL::Schema& s);
 };
 
+};
 #endif

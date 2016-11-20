@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cstdlib>
 
+namespace SchemaParser{
+
 namespace keyword {
    const std::string Primary = "primary";
    const std::string Key = "key";
@@ -29,10 +31,10 @@ namespace literal {
    const char QuotationMark = '\"';
 }
 
-std::unique_ptr<Schema> Parser::parse() {
+std::unique_ptr<SQL::Schema> Parser::parse() {
    std::string token;
    unsigned line=1;
-   std::unique_ptr<Schema> s(new Schema());
+   std::unique_ptr<SQL::Schema> s(new SQL::Schema());
    in.open(fileName.c_str());
    if (!in.is_open())
       throw ParserError(line, "cannot open file '"+fileName+"'");
@@ -78,7 +80,7 @@ static bool isInt(const std::string& str) {
    return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) {
+void Parser::nextToken(unsigned line, const std::string& token, SQL::Schema& schema) {
 	if (getenv("DEBUG"))
 		std::cerr << line << ": " << token << std::endl;
    if (token.empty())
@@ -107,12 +109,12 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
           {
                 //tmp = token.substr(1, std::distance(token.begin(), token.end()) - 2);
                 state=State::TableName;
-                schema.relations.push_back(Schema::Relation(token.substr(1, std::distance(token.begin(), token.end()) - 2)));
+                schema.relations.push_back(SQL::Schema::Relation(token.substr(1, std::distance(token.begin(), token.end()) - 2)));
                 break;
           }
          if (isIdentifier(tok)) {
             state=State::TableName;
-            schema.relations.push_back(Schema::Relation(token));
+            schema.relations.push_back(SQL::Schema::Relation(token));
          } else {
             throw ParserError(line, "Expected TableName, found '"+token+"'");
          }
@@ -178,7 +180,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             struct AttributeNamePredicate {
                const std::string& name;
                AttributeNamePredicate(const std::string& name) : name(name) {}
-               bool operator()(const Schema::Relation::Attribute& attr) const {
+               bool operator()(const SQL::Schema::Relation::Attribute& attr) const {
                   return attr.name == name;
                }
             };
@@ -236,7 +238,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
          } else if (tok==keyword::Primary) {
             state=State::Primary;
          } else if (isIdentifier(tok)) {
-            schema.relations.back().attributes.push_back(Schema::Relation::Attribute());
+            schema.relations.back().attributes.push_back(SQL::Schema::Relation::Attribute());
             schema.relations.back().attributes.back().name = token;
             state=State::AttributeName;
          } else {
@@ -268,7 +270,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
             struct AttributeNamePredicate {
                const std::string& name;
                AttributeNamePredicate(const std::string& name) : name(name) {}
-               bool operator()(const Schema::Relation::Attribute& attr) const {
+               bool operator()(const SQL::Schema::Relation::Attribute& attr) const {
                   return attr.name == name;
                }
             };
@@ -424,4 +426,6 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
       default:
          throw;
    }
+}
+
 }

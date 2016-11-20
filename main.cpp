@@ -6,13 +6,19 @@
 #include <utility>
 #include <memory>
 
-
+#include "parser/Parser.hpp"
+#include "QueryParser.hpp"
 
 int main()
 {
 	DatabaseColumn db;
-  
-    db.printInfoTask4();
+
+    QueryParser::QueryParser qp;
     
+    try {
+        qp.parse("select w_id from warehouse;");
+    } catch (QueryParser::QueryParserError& e) {
+        std::cerr << e.what() << std::endl;
+    }
     return 0;   
 }
