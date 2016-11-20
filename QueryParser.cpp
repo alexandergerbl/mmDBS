@@ -1,10 +1,12 @@
 #include "QueryParser.hpp"
 #include "parser/Schema.hpp"
+#include "AlgebraOperator.hpp"
 
 #include <iostream>
 #include <iterator>
 #include <algorithm>
 #include <cstdlib>
+#include <unordered_map>
 
 namespace QueryParser{
 
@@ -193,11 +195,19 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
    }
 }
 
-std::string QueryParser::generateCPP() const
+void QueryParser::generateOperatorTree() const
 {
+  /*  auto root = std::make_shared<AlgebraOperator::Print>(join_customer_order_orderline, attributes);
+    
+    root->setParent(nullptr);
+    root->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
+    
+    
+    //maps the tablename to last variable name of the table
+    std::unordered_map<std::string, std::string> lastVarname;
     //TODO
     std::stringstream out;
-    
+    //First Tables scans
     for(auto it = this->tables.begin(); it != this->tables.end(); it++)
     {
         out << "std::vector<Attribute> attributes_" << (*it) << " = {";
@@ -215,11 +225,25 @@ std::string QueryParser::generateCPP() const
                 }
                 out << "auto " << this->schema->relations[i].name << " = std::make_shared<TableScan>(m_" << this->schema->relations[i].name << ", attributes_" << this->schema->relations[i].name << ");";
                 std::cout << std::endl;
+                lastVarname["m_" + this->schema->relations[i].name] = this->schema->relations[i].name;
             }
         }
         
         out << "};";
     }
+    //2. Selection 
+    auto selectionAttributes = this->getSelectionClauses();
+    for(auto it = this->tables.begin(); it != this->tables.end(); it++)
+    {
+        std::vector<Clause> tmp_clause;
+        std::for_each(selectionAttributes.begin(), selectionAttributes.end(), [&](auto const& a){ if( (*it) == a.table_name) tmp_clause.push_back(a); });
+        
+        if(!tmp_clause.empty())
+        {
+            //TODO create selection operator
+        }
+    }
+    
     
     out << "\n\n//what attributes to print\n";
     out << "std::vector<Attribute> print_attributes = {";
@@ -234,6 +258,31 @@ std::string QueryParser::generateCPP() const
     out << ");\nroot->setParent(nullptr);\nroot->produce(std::shared_ptr<AlgebraOperator>(nullptr));\n";
     
     return out.str();
+}
+
+std::vector<Clause> QueryParser::getJoinAttributes(std::string table_name1, std::string table_name2) const
+{
+    std::vector<Clause> result;
+    
+    //for all whereClauses 
+    for(auto const& clause : this->whereClauses)
+    {
+        if((clause.table_name == table_name1 && clause.table_name2 == table_name2) || (clause.table_name == table_name2 && clause.table_name2 == table_name1))
+        {
+            result.emplace_back(clause);
+        }
+    }
+    
+    return result;
+}
+
+std::vector<Clause> QueryParser::getSelectionClauses() const
+{
+    std::vector<Clause> result;
+    
+    std::for_each(this->whereClauses.begin(), this->whereClauses.end(), [&](Clause const& c){ if(c.isConstant) result.push_back(c); });
+    
+    return result;*/
 }
 
 }

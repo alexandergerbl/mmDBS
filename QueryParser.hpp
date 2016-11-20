@@ -56,11 +56,15 @@ struct QueryParser {
    ~QueryParser() {};
    std::unique_ptr<SQL::Schema> parse(std::string const& query);
 
-   std::string generateCPP() const;
+   void generateOperatorTree() const;
    
    private:
        //returns true if query ended ";"
    void nextToken(unsigned line, const std::string& token, SQL::Schema& s);
+   
+   //doesnt really belong to parser, but only one function
+   std::vector<Clause> getJoinAttributes(std::string table_name1, std::string table_name2) const;
+   std::vector<Clause> getSelectionClauses() const;
 };
 
 };

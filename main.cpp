@@ -18,7 +18,7 @@ int main()
     try {
         qp.parse("select w_id from warehouse;");
         
-        std::cout << qp.generateCPP() << std::endl;
+        //std::cout << qp.generateOperatorTree() << std::endl;
         
     } catch (QueryParser::QueryParserError& e) {
         std::cerr << e.what() << std::endl;
