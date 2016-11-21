@@ -281,6 +281,11 @@ namespace AlgebraOperator
             }
         }
 
+        bool HashJoin::isHashJoinAbove()
+        {
+            return true;
+        }
+
         
         void TableScan::setParent(std::shared_ptr<AlgebraOperator> sp) 
         {
@@ -312,6 +317,16 @@ namespace AlgebraOperator
         {
             //Nothing to do here
         }
+        
+        bool TableScan::isHashJoinAbove()
+        {
+            if(auto s_ptr = this->parent.lock())
+            {
+                return s_ptr->isHashJoinAbove();
+            }
+            throw;
+        }
+
         
         //Selection
         
@@ -364,6 +379,15 @@ namespace AlgebraOperator
             std::cout << "\n\t}" << std::endl;
         }
         
+        bool Selection::isHashJoinAbove()
+        {
+            if(auto s_ptr = this->parent.lock())
+            {
+                return s_ptr->isHashJoinAbove();
+            }
+            throw;
+        }
+        
         /*
          * Print
          */
@@ -395,17 +419,34 @@ namespace AlgebraOperator
             std::cout << "\t\tstd::cout";
             
             auto produced_by_child = input->producesAttr();
-            
-            for(auto i = 0; i < produced_by_child.size(); i++)
+            if(this->isHashJoinAbove())
             {
-                std::cout << " << std::get<" << i << ">(it->second) << \" \" ";
+                for(auto i = 0; i < produced_by_child.size(); i++)
+                {
+                    std::cout << " << std::get<" << i << ">(it->second) << \" \" ";
+                    
+                }
                 
+                for(auto i = produced_by_child.size(); i < this->attributes.size(); i++)
+                {
+                    std::cout << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                }
             }
-            
-            for(auto i = produced_by_child.size(); i < this->attributes.size(); i++)
+            else
             {
-                std::cout << " << db." << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                //No HashJoin above so just print attributes directly
+                auto produced_by_child = input->producesAttr();
+                for(auto i = 0; i < produced_by_child.size(); i++)
+                {
+                    std::cout << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                }
             }
             std::cout << " << std::endl;" << std::endl;
         }
+        
+        bool Print::isHashJoinAbove()
+        {
+            return false;
+        }
+
 }

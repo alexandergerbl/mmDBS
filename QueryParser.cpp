@@ -33,11 +33,49 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
       //TODO
        auto it = token.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890");
        auto tmp = token.substr(0, it);
-       
-       nextToken(line, tmp, *s);
        if(token.size() > it)
-           token.erase(0, it+1);
+                token.erase(0, it);
+       
+       if(token.substr(0, 1) != ";")
+           token.erase(0, 1);
+       
+       
+       
+       if(token == ";")
+       {
+           nextToken(line, ";", *s);
+           token.clear();
+       }
+       else
+       {
+            nextToken(line, tmp, *s);
+       }
+       
    }
+   
+   for(int i = 0; i < this->stack.size(); i++)
+   {
+       if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) == nullptr)
+       {
+           //no hashjoin
+           if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr)
+           {
+               std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->input = this->stack[i+1];
+           }
+           if(std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i]) != nullptr)
+           {
+               std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i])->input = this->stack[i+1];
+           }
+       }
+       else
+       {
+           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = this->stack[+1];
+           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->right = this->stack[+2];
+       }
+   }
+   
+   //std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
+   this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    
    return std::move(s);
 }
@@ -81,7 +119,8 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             if(this->schema->isAttribute(tok))
             {
                 //read possibly further attributes;
-                this->selectedAttributes.emplace_back(tok);
+                AlgebraOperator::Attribute tmp = {this->schema->getTableName(tok), tok, this->schema->getType(this->schema->getTableName(tok), tok)};
+                this->selectedAttributes.emplace_back(tmp);
                 state=State::AttributeName;   
             }
             else
@@ -99,6 +138,9 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                 break;
           }
          if (tok == keyword::From) {
+             //create print
+             this->stack.push_back(std::make_shared<AlgebraOperator::Print>(this->selectedAttributes));
+             
             state=State::From;
          } else {
             throw QueryParserError(line, "Expected 'FROM' or ',', found '"+token+"'");
@@ -113,13 +155,20 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
               if(this->schema->isTableName(tok))
               {
                   //nothing to do, just check whether table exists
-                  this->tables.insert(tok);
+                  this->tables.push_back(tok);
                   state=State::TableName;
               }
               else
                 throw QueryParserError(line, "Expected TableName, found '"+token+"'");
               
           }
+          else if(tok[0] == literal::Semicolon)
+          {
+                //TABLESCAN MISSING TODO
+                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
+            return;          }
           else
               throw QueryParserError(line, "Expected TableName, found '"+token+"'");
           break;
@@ -130,8 +179,35 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                 break;
           }
          if (tok == keyword::Where) {
+             //push hashjoins on stack
+             if(this->tables.size() != 1)
+             {
+             
+                for(int i = 0; i < this->tables.size()-1; i++)
+                {
+                    this->stack.push_back(std::make_shared<AlgebraOperator::HashJoin>());
+                    auto table_n1 = this->tables[i];
+                    auto table_n2 = this->tables[i+1];
+                    if(table_n1 < table_n2)
+                        this->getHashJoin[std::make_pair(table_n1, table_n2)] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack.back());
+                    else
+                        this->getHashJoin[std::make_pair(table_n2, table_n1)] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack.back());
+                }
+                    
+             }
             state=State::Where;
-         } else {
+         } else if(tok[0]==literal::Semicolon)
+         {
+            state = State::End;
+            
+            //TABLESCANS
+            //TABLESCAN MISSING TODO
+                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
+            return;
+         }
+         else {
             throw QueryParserError(line, "Expected 'WHERE' or ',', found '"+token+"'");
          }
           break;
@@ -180,13 +256,45 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             this->whereClauses.back().isConstant = true;
             this->whereClauses.back().value = tok;          
           }
+          std::cout << "BB" << std::endl;
           state=State::WhereAttributeValue;   
          break;
       case State::WhereAttributeValue:
          if (tok == keyword::And)
             state=State::WhereFurtherAttribute;
          else if(tok[0] == literal::Semicolon)
+         {
+             std::cout << "Found Semicolon" << std::endl;
+             for(auto const& clause : this->whereClauses)
+             {
+                 if(clause.isConstant)
+                 {
+                     //selection
+                     std::vector<Clause> attr;
+                     attr.push_back(clause);
+                     this->stack.push_back(std::make_shared<AlgebraOperator::Selection>(attr));
+                 }
+                 else
+                 {
+                     //join
+                     auto table_n1 = clause.table_name;
+                     auto table_n2 = clause.table_name2;
+                     
+                     std::shared_ptr<AlgebraOperator::HashJoin> s_ptr;
+                     if(table_n1 < table_n2)
+                         s_ptr = this->getHashJoin[std::make_pair(clause.table_name, clause.table_name2)];
+                     else
+                         s_ptr = this->getHashJoin[std::make_pair(clause.table_name2, clause.table_name)];
+                     s_ptr->join_attributes.push_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
+                 }
+                 
+             }
+             //TABLESCAN MISSING TODO
+                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
              return;
+         }
          else
             throw QueryParserError(line, "Expected 'and' or ';', found '"+token+"'");
          break;
@@ -197,12 +305,17 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
 
 void QueryParser::generateOperatorTree() const
 {
-  /*  auto root = std::make_shared<AlgebraOperator::Print>(join_customer_order_orderline, attributes);
+    //0. Print
+    //1. HashJoin
+    //2. Selection
+    //3. TableScan
+/*    
+    auto root = std::make_shared<AlgebraOperator::Print>(join_customer_order_orderline, attributes);
     
     root->setParent(nullptr);
     root->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
-    
-    
+  */  
+  /*  
     //maps the tablename to last variable name of the table
     std::unordered_map<std::string, std::string> lastVarname;
     //TODO
@@ -257,7 +370,7 @@ void QueryParser::generateOperatorTree() const
     out << ", print_attributes";
     out << ");\nroot->setParent(nullptr);\nroot->produce(std::shared_ptr<AlgebraOperator>(nullptr));\n";
     
-    return out.str();
+    return out.str();*/
 }
 
 std::vector<Clause> QueryParser::getJoinAttributes(std::string table_name1, std::string table_name2) const
@@ -282,7 +395,7 @@ std::vector<Clause> QueryParser::getSelectionClauses() const
     
     std::for_each(this->whereClauses.begin(), this->whereClauses.end(), [&](Clause const& c){ if(c.isConstant) result.push_back(c); });
     
-    return result;*/
+    return result;
 }
 
 }

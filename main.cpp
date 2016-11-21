@@ -13,6 +13,9 @@ int main()
 {
 	DatabaseColumn db;
 
+ 
+
+    
     QueryParser::QueryParser qp;
     
     try {

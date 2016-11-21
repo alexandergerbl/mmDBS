@@ -6,12 +6,16 @@
 #include <memory>
 #include <fstream>
 #include <sstream>
-#include <set>
+//#include <set>
 #include <iostream>
+//#include <unordered_map>
+#include <map>
+#include <utility>
 
 #include "./parser/Schema.hpp"
 #include "./parser/Parser.hpp"
 #include "Clause.hpp"
+#include "AlgebraOperator.hpp"
 
 namespace QueryParser{
 
@@ -29,15 +33,21 @@ class QueryParserError : std::exception {
 struct QueryParser {
    
    std::ifstream in;
-   enum class State : unsigned { Init, Select, From, Where, And, Semicolon, Equal, AttributeName, FurtherAttribute, TableName, FurtherTableName, WhereAttributeName, WhereAttributeValue, WhereFurtherAttribute};
+   enum class State : unsigned { Init, End, Select, From, Where, And, Semicolon, Equal, AttributeName, FurtherAttribute, TableName, FurtherTableName, WhereAttributeName, WhereAttributeValue, WhereFurtherAttribute};
    State state;
    
    std::unique_ptr<SQL::Schema> schema;
    
-   std::vector<std::string> selectedAttributes;
+   std::vector<AlgebraOperator::Attribute> selectedAttributes;
    std::vector<Clause> whereClauses;
+   //get from FROM part
+   std::vector<std::string> tables;
+   //to access hashjoins to add attributes later
+   //key <table-name1, table-name2> value <ptr to HashJoin>
+   std::map<std::pair<std::string, std::string>, std::shared_ptr<AlgebraOperator::HashJoin>> getHashJoin;
    
-   std::set<std::string> tables;
+   
+   std::vector<std::shared_ptr<AlgebraOperator::AlgebraOperator>> stack;
    
    QueryParser() : state(State::Init)
    {

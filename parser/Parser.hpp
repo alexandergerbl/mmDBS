@@ -8,6 +8,8 @@
 #include <sstream>
 #include "Schema.hpp"
 
+
+
 namespace SchemaParser{
 
 class ParserError : std::exception {

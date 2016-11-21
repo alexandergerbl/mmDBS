@@ -41,6 +41,8 @@ namespace AlgebraOperator
         
         //avoid empty weak_ptr 
         virtual void setParent(std::shared_ptr<AlgebraOperator> sp) = 0;
+        
+        virtual bool isHashJoinAbove() = 0;
     };
 
 
@@ -61,7 +63,7 @@ namespace AlgebraOperator
         
         std::vector<std::pair<Attribute, Attribute>> join_attributes;
         
-        HashJoin(std::shared_ptr<AlgebraOperator> left, std::shared_ptr<AlgebraOperator> right, std::vector<std::pair<Attribute, Attribute>> join_attributes) : left{left}, right{right}, join_attributes{join_attributes} {}
+        HashJoin() {}
 
         
         void setParent(std::shared_ptr<AlgebraOperator> sp) override;
@@ -79,6 +81,8 @@ namespace AlgebraOperator
         
         
         void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        
+        bool isHashJoinAbove() override;
     };
 
     
@@ -116,6 +120,8 @@ namespace AlgebraOperator
         void produce(std::shared_ptr<AlgebraOperator> parent) override;
         
         void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        
+        bool isHashJoinAbove() override;
     };
 
     /*
@@ -133,7 +139,7 @@ namespace AlgebraOperator
         
         std::vector<Clause> clauses;
         
-        Selection(std::shared_ptr<AlgebraOperator> input, std::vector<Clause> clauses) : input{input}, clauses{clauses} {}
+        Selection(std::vector<Clause> clauses) : clauses{clauses} {}
         
         void setParent(std::shared_ptr<AlgebraOperator> sp) override;
         
@@ -145,6 +151,8 @@ namespace AlgebraOperator
         void produce(std::shared_ptr<AlgebraOperator> parent) override;
         
         void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        
+        bool isHashJoinAbove() override;
     };
 
     /*
@@ -154,12 +162,13 @@ namespace AlgebraOperator
     */
     class Print : public std::enable_shared_from_this<Print>, public AlgebraOperator
     {
+    public:
         std::shared_ptr<AlgebraOperator> input;
         std::weak_ptr<AlgebraOperator> parent;
         //attributes that should be printed
         std::vector<Attribute> attributes;
-    public:
-        Print(std::shared_ptr<AlgebraOperator> input, std::vector<Attribute> attributes) : input{input}, attributes{attributes} 
+    
+        Print(std::vector<Attribute> attributes) : attributes{attributes} 
         {
             
         }
@@ -175,6 +184,9 @@ namespace AlgebraOperator
         void produce(std::shared_ptr<AlgebraOperator> parent) override;
         
         void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        
+        bool isHashJoinAbove() override;
+
     };
 
 

@@ -1,12 +1,13 @@
 #include "Schema.hpp"
+//#include "Parser.hpp"
 
 #include <iostream>
 #include <sstream>
 
 namespace SQL
 {
-/*
-static std::string type(const Schema::Relation::Attribute& attr) {
+
+static std::string typeToString(const Schema::Relation::Attribute& attr) {
    SchemaParser::Types::Tag type = attr.type;
    switch(type) {
       case SchemaParser::Types::Tag::Integer:
@@ -30,7 +31,7 @@ static std::string type(const Schema::Relation::Attribute& attr) {
       }
    }
    throw;
-}*/
+}
 
 std::string Schema::toString() const {
    std::stringstream out;  
@@ -565,5 +566,20 @@ Schema::Relation::Attribute Schema::getAttribute(std::string attribute) const
     return Schema::Relation::Attribute();
 }
 
+std::string Schema::getType(std::string table, std::string attribute) const
+{
+    for(auto const& rel : this->relations)
+    {
+        if(rel.name == table)
+        {
+            for(auto const& attr : rel.attributes)
+            {
+                if(attr.name == attribute)
+                    return typeToString(attr);
+            }
+        }
+    }
+    throw;
+}
 }
 

@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 #include "Types.hpp"
+//#include "Parser.hpp"
 
-namespace SQL{
+namespace SQL
+{
 
     struct Schema {
     struct Relation {
@@ -40,6 +42,7 @@ namespace SQL{
     bool isAttribute(std::string attr) const;
     bool isTableName(std::string attr) const;
     std::string getTableName(std::string attribute) const;
+    std::string getType(std::string table, std::string attribute) const;
     Schema::Relation::Attribute getAttribute(std::string attribute) const;
     };
 
@@ -70,5 +73,4 @@ namespace SQL{
     }
     
 }
-
 #endif
