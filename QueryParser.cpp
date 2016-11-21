@@ -24,6 +24,11 @@ namespace literal {
    const char Equal = '=';
 }
 
+static bool isInt(const std::string& str) {
+   return str.find_first_not_of("0123456789") == std::string::npos;
+}
+
+
 std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
    std::string token = query;
    unsigned line=1;
@@ -31,25 +36,27 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
    
    while (token.size() != 0) {
       //TODO
-       auto it = token.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890");
+       auto it = token.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890=");
        auto tmp = token.substr(0, it);
+       
+       std::cout << "Tmp = " << tmp << std::endl;
+       
        if(token.size() > it)
                 token.erase(0, it);
        
-       if(token.substr(0, 1) != ";")
+       
+       if(token.substr(0, 1) == " ")
            token.erase(0, 1);
-       
-       
        
        if(token == ";")
        {
+           nextToken(line, tmp, *s);
            nextToken(line, ";", *s);
            token.clear();
        }
        else
-       {
-            nextToken(line, tmp, *s);
-       }
+           nextToken(line, tmp, *s);
+       
        
    }
    
@@ -74,7 +81,7 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
        }
    }
    
-   //std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
+   std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    
    return std::move(s);
@@ -92,11 +99,9 @@ static bool isQueryIdentifier(const std::string& str) {
 }
 
 
-static bool isInt(const std::string& str) {
-   return str.find_first_not_of("0123456789") == std::string::npos;
-}
 
 void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema& schema) {
+
 	if (getenv("DEBUG"))
 		std::cerr << line << ": " << token << std::endl;
    if (token.empty())
@@ -248,15 +253,14 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                     this->whereClauses.back().table_name2 = tableName;
                     this->whereClauses.back().value = tok;
                 }
+                else if(isInt(tok))
+                {
+                    this->whereClauses.back().isConstant = true;
+                    this->whereClauses.back().value = tok;          
+                }
                 else
                         throw QueryParserError(line, "Expected Attribute, found '"+token+"'");
-          } else
-          {
-              // must be constant
-            this->whereClauses.back().isConstant = true;
-            this->whereClauses.back().value = tok;          
           }
-          std::cout << "BB" << std::endl;
           state=State::WhereAttributeValue;   
          break;
       case State::WhereAttributeValue:
