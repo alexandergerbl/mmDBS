@@ -36,10 +36,18 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
    
    while (token.size() != 0) {
       //TODO
-       auto it = token.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890=");
+       if(token[0] == ',')
+       {
+           token.erase(0, 1);
+           nextToken(line, ",", *s);
+       }
+       if(token.substr(0, 1) == " ")
+           token.erase(0, 1);
+       
+       auto it = token.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890=\'");
        auto tmp = token.substr(0, it);
        
-       std::cout << "Tmp = " << tmp << std::endl;
+       //std::cout << "Tmp = " << tmp << std::endl;
        
        if(token.size() > it)
                 token.erase(0, it);
@@ -81,7 +89,7 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
        }
    }
    
-   std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
+  // std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    
    return std::move(s);
@@ -95,7 +103,7 @@ static bool isQueryIdentifier(const std::string& str) {
       str==keyword::And 
    )
       return false;
-   return str.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
+   return str.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
 }
 
 
@@ -107,7 +115,10 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
    if (token.empty())
       return;
    std::string tok;
-   std::transform(token.begin(), token.end(), std::back_inserter(tok), tolower);
+   if(token[0] != '\'')
+       std::transform(token.begin(), token.end(), std::back_inserter(tok), tolower);
+   else
+       tok = token;
    switch(state) {
       case State::Semicolon: /* fallthrough */
       case State::Init:
@@ -170,9 +181,31 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
           else if(tok[0] == literal::Semicolon)
           {
                 //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 std::vector<AlgebraOperator::Attribute> attributes = {
+                    {"m_customer", "c_id", "Integer"},
+                    {"m_customer", "c_d_id", "Integer"},
+                    {"m_customer", "c_w_id", "Integer"},
+                    {"m_customer", "c_first", "Varchar<16>"},
+                    {"m_customer", "c_middle", "Char<2>"},
+                    {"m_customer", "c_last", "Varchar<16>"},
+                    {"m_customer", "c_street_1", "Varchar<20>"},
+                    {"m_customer", "c_street_2", "Varchar<20>"}, 
+                    {"m_customer", "c_city", "Varchar<20>"},
+                    {"m_customer", "c_state", "Char<2>"},
+                    {"m_customer", "c_zip", "Char<9>"},
+                    {"m_customer", "c_phone", "Char<16>"},
+                    {"m_customer", "c_since", "Timestamp"}, 
+                    {"m_customer", "c_credit", "Char<2>"}, 
+                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
+                    {"m_customer", "c_discount", "Numeric<4, 4>"},
+                    {"m_customer", "c_balance", "Numeric<12, 2>"},
+                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
+                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
+                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
+                    {"m_customer", "c_data", "Varchar<500>"}
+                };
                  
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
             return;          }
           else
               throw QueryParserError(line, "Expected TableName, found '"+token+"'");
@@ -207,9 +240,31 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             
             //TABLESCANS
             //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 std::vector<AlgebraOperator::Attribute> attributes = {
+                    {"m_customer", "c_id", "Integer"},
+                    {"m_customer", "c_d_id", "Integer"},
+                    {"m_customer", "c_w_id", "Integer"},
+                    {"m_customer", "c_first", "Varchar<16>"},
+                    {"m_customer", "c_middle", "Char<2>"},
+                    {"m_customer", "c_last", "Varchar<16>"},
+                    {"m_customer", "c_street_1", "Varchar<20>"},
+                    {"m_customer", "c_street_2", "Varchar<20>"}, 
+                    {"m_customer", "c_city", "Varchar<20>"},
+                    {"m_customer", "c_state", "Char<2>"},
+                    {"m_customer", "c_zip", "Char<9>"},
+                    {"m_customer", "c_phone", "Char<16>"},
+                    {"m_customer", "c_since", "Timestamp"}, 
+                    {"m_customer", "c_credit", "Char<2>"}, 
+                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
+                    {"m_customer", "c_discount", "Numeric<4, 4>"},
+                    {"m_customer", "c_balance", "Numeric<12, 2>"},
+                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
+                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
+                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
+                    {"m_customer", "c_data", "Varchar<500>"}
+                };
                  
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
             return;
          }
          else {
@@ -243,8 +298,17 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
           break;
       case State::Equal:
           //either constant or attribute
+          //remove '
+          std::cout << "back = " << tok.back() << std::endl;
+          if(tok[0] == '\'' && tok.back() == '\'')
+          {
+              std::cout << "REMOVE apo" << std::endl;
+              tok = tok.substr(1, std::distance(tok.begin(), tok.end()) - 2);
+          }
+          std::cout << "Is BARBARBAR = " << tok << std::endl;
           if(isQueryIdentifier(tok))
           {
+              
                 if(this->schema->isAttribute(tok))
                 {
                     //read possibly further attributes;
@@ -259,8 +323,14 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                     this->whereClauses.back().value = tok;          
                 }
                 else
-                        throw QueryParserError(line, "Expected Attribute, found '"+token+"'");
+                {
+                        //throw QueryParserError(line, "Expected Attribute, found '"+token+"'");
+                    //must be string param
+                    this->whereClauses.back().isConstant = true;
+                    this->whereClauses.back().value = "\"" + tok + "\"";
+                }
           }
+          
           state=State::WhereAttributeValue;   
          break;
       case State::WhereAttributeValue:
@@ -268,7 +338,7 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             state=State::WhereFurtherAttribute;
          else if(tok[0] == literal::Semicolon)
          {
-             std::cout << "Found Semicolon" << std::endl;
+             std::cout << "Found Semicolon number of clauses = " << this->whereClauses.size() << std::endl;
              for(auto const& clause : this->whereClauses)
              {
                  if(clause.isConstant)
@@ -280,23 +350,39 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                  }
                  else
                  {
-                     //join
-                     auto table_n1 = clause.table_name;
-                     auto table_n2 = clause.table_name2;
-                     
-                     std::shared_ptr<AlgebraOperator::HashJoin> s_ptr;
-                     if(table_n1 < table_n2)
-                         s_ptr = this->getHashJoin[std::make_pair(clause.table_name, clause.table_name2)];
-                     else
-                         s_ptr = this->getHashJoin[std::make_pair(clause.table_name2, clause.table_name)];
-                     s_ptr->join_attributes.push_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
+                     std::vector<Clause> attr;
+                     attr.push_back({clause.table_name, clause.attribute, clause.table_name, clause.value, true});
+                     this->stack.push_back(std::make_shared<AlgebraOperator::Selection>(attr));
                  }
                  
              }
+             std::cout << "Found Semicolon - B" << std::endl;
              //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {{"m_warehouse", "w_id", "Integer"}};
+                 std::vector<AlgebraOperator::Attribute> attributes = {
+                    {"m_customer", "c_id", "Integer"},
+                    {"m_customer", "c_d_id", "Integer"},
+                    {"m_customer", "c_w_id", "Integer"},
+                    {"m_customer", "c_first", "Varchar<16>"},
+                    {"m_customer", "c_middle", "Char<2>"},
+                    {"m_customer", "c_last", "Varchar<16>"},
+                    {"m_customer", "c_street_1", "Varchar<20>"},
+                    {"m_customer", "c_street_2", "Varchar<20>"}, 
+                    {"m_customer", "c_city", "Varchar<20>"},
+                    {"m_customer", "c_state", "Char<2>"},
+                    {"m_customer", "c_zip", "Char<9>"},
+                    {"m_customer", "c_phone", "Char<16>"},
+                    {"m_customer", "c_since", "Timestamp"}, 
+                    {"m_customer", "c_credit", "Char<2>"}, 
+                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
+                    {"m_customer", "c_discount", "Numeric<4, 4>"},
+                    {"m_customer", "c_balance", "Numeric<12, 2>"},
+                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
+                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
+                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
+                    {"m_customer", "c_data", "Varchar<500>"}
+                };
                  
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_warehouse", attributes));
+                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
              return;
          }
          else

@@ -436,7 +436,7 @@ namespace AlgebraOperator
             {
                 //No HashJoin above so just print attributes directly
                 auto produced_by_child = input->producesAttr();
-                for(auto i = 0; i < produced_by_child.size(); i++)
+                for(auto i = 0; i < this->attributes.size(); i++)
                 {
                     std::cout << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
                 }

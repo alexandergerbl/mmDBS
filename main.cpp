@@ -19,7 +19,7 @@ int main()
     QueryParser::QueryParser qp;
     
     try {
-        qp.parse("select w_id from warehouse where w_id = 1;");
+        qp.parse("select c_id, c_first, c_middle, c_last from customer where c_last = 'BARBARBAR';");
         
         //std::cout << qp.generateOperatorTree() << std::endl;
         
