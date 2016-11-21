@@ -106,6 +106,31 @@ static bool isQueryIdentifier(const std::string& str) {
    return str.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
 }
 
+std::string typeToString(const SQL::Schema::Relation::Attribute& attr) {
+   SchemaParser::Types::Tag type = attr.type;
+   switch(type) {
+      case SchemaParser::Types::Tag::Integer:
+         return "Integer";
+      case SchemaParser::Types::Tag::Timestamp:
+          return "Timestamp";
+      case SchemaParser::Types::Tag::Varchar:{
+         std::stringstream ss;
+         ss << "Varchar<" << attr.len << ">";
+         return ss.str();
+      }
+      case SchemaParser::Types::Tag::Numeric: {
+         std::stringstream ss;
+         ss << "Numeric<" << attr.len1 << ", " << attr.len2 << ">";
+         return ss.str();
+      }
+      case SchemaParser::Types::Tag::Char: {
+         std::stringstream ss;
+         ss << "Char<" << attr.len << ">";
+         return ss.str();
+      }
+   }
+   throw;
+}
 
 
 void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema& schema) {
@@ -180,33 +205,30 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
           }
           else if(tok[0] == literal::Semicolon)
           {
-                //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {
-                    {"m_customer", "c_id", "Integer"},
-                    {"m_customer", "c_d_id", "Integer"},
-                    {"m_customer", "c_w_id", "Integer"},
-                    {"m_customer", "c_first", "Varchar<16>"},
-                    {"m_customer", "c_middle", "Char<2>"},
-                    {"m_customer", "c_last", "Varchar<16>"},
-                    {"m_customer", "c_street_1", "Varchar<20>"},
-                    {"m_customer", "c_street_2", "Varchar<20>"}, 
-                    {"m_customer", "c_city", "Varchar<20>"},
-                    {"m_customer", "c_state", "Char<2>"},
-                    {"m_customer", "c_zip", "Char<9>"},
-                    {"m_customer", "c_phone", "Char<16>"},
-                    {"m_customer", "c_since", "Timestamp"}, 
-                    {"m_customer", "c_credit", "Char<2>"}, 
-                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
-                    {"m_customer", "c_discount", "Numeric<4, 4>"},
-                    {"m_customer", "c_balance", "Numeric<12, 2>"},
-                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
-                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
-                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
-                    {"m_customer", "c_data", "Varchar<500>"}
-                };
+                //TABLESCAN MISSING 
+              
+                for(auto const& t : this->tables)
+                {
+                    std::vector<AlgebraOperator::Attribute> attributes;
+                    
+                    for(auto const& rel: this->schema->relations)
+                    {
+                        if(rel.name == t)
+                        {
+                            for(auto const& attr : rel.attributes)
+                            {
+                                attributes.push_back({t, attr.name, typeToString(attr)});
+                            }
+                        }
+                    }
+                    this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_"+t, attributes));
+                }
+              
                  
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
-            return;          }
+                 
+            return;
+              
+        }
           else
               throw QueryParserError(line, "Expected TableName, found '"+token+"'");
           break;
@@ -240,31 +262,22 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             
             //TABLESCANS
             //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {
-                    {"m_customer", "c_id", "Integer"},
-                    {"m_customer", "c_d_id", "Integer"},
-                    {"m_customer", "c_w_id", "Integer"},
-                    {"m_customer", "c_first", "Varchar<16>"},
-                    {"m_customer", "c_middle", "Char<2>"},
-                    {"m_customer", "c_last", "Varchar<16>"},
-                    {"m_customer", "c_street_1", "Varchar<20>"},
-                    {"m_customer", "c_street_2", "Varchar<20>"}, 
-                    {"m_customer", "c_city", "Varchar<20>"},
-                    {"m_customer", "c_state", "Char<2>"},
-                    {"m_customer", "c_zip", "Char<9>"},
-                    {"m_customer", "c_phone", "Char<16>"},
-                    {"m_customer", "c_since", "Timestamp"}, 
-                    {"m_customer", "c_credit", "Char<2>"}, 
-                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
-                    {"m_customer", "c_discount", "Numeric<4, 4>"},
-                    {"m_customer", "c_balance", "Numeric<12, 2>"},
-                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
-                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
-                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
-                    {"m_customer", "c_data", "Varchar<500>"}
-                };
-                 
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
+                for(auto const& t : this->tables)
+                {
+                    std::vector<AlgebraOperator::Attribute> attributes;
+                    
+                    for(auto const& rel: this->schema->relations)
+                    {
+                        if(rel.name == t)
+                        {
+                            for(auto const& attr : rel.attributes)
+                            {
+                                attributes.push_back({t, attr.name, typeToString(attr)});
+                            }
+                        }
+                    }
+                    this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_"+t, attributes));
+                }
             return;
          }
          else {
@@ -299,13 +312,10 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
       case State::Equal:
           //either constant or attribute
           //remove '
-          std::cout << "back = " << tok.back() << std::endl;
           if(tok[0] == '\'' && tok.back() == '\'')
           {
-              std::cout << "REMOVE apo" << std::endl;
               tok = tok.substr(1, std::distance(tok.begin(), tok.end()) - 2);
           }
-          std::cout << "Is BARBARBAR = " << tok << std::endl;
           if(isQueryIdentifier(tok))
           {
               
@@ -314,7 +324,7 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                     //read possibly further attributes;
                     auto tableName = this->schema->getTableName(tok);
                     
-                    this->whereClauses.back().table_name2 = tableName;
+                    this->whereClauses.back().table_name2 = "m_" + tableName;
                     this->whereClauses.back().value = tok;
                 }
                 else if(isInt(tok))
@@ -351,38 +361,29 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                  else
                  {
                      std::vector<Clause> attr;
-                     attr.push_back({clause.table_name, clause.attribute, clause.table_name, clause.value, true});
+                     attr.push_back({"m_" + clause.table_name, clause.attribute, "m_" + clause.table_name, clause.value, true});
                      this->stack.push_back(std::make_shared<AlgebraOperator::Selection>(attr));
                  }
                  
              }
              std::cout << "Found Semicolon - B" << std::endl;
-             //TABLESCAN MISSING TODO
-                 std::vector<AlgebraOperator::Attribute> attributes = {
-                    {"m_customer", "c_id", "Integer"},
-                    {"m_customer", "c_d_id", "Integer"},
-                    {"m_customer", "c_w_id", "Integer"},
-                    {"m_customer", "c_first", "Varchar<16>"},
-                    {"m_customer", "c_middle", "Char<2>"},
-                    {"m_customer", "c_last", "Varchar<16>"},
-                    {"m_customer", "c_street_1", "Varchar<20>"},
-                    {"m_customer", "c_street_2", "Varchar<20>"}, 
-                    {"m_customer", "c_city", "Varchar<20>"},
-                    {"m_customer", "c_state", "Char<2>"},
-                    {"m_customer", "c_zip", "Char<9>"},
-                    {"m_customer", "c_phone", "Char<16>"},
-                    {"m_customer", "c_since", "Timestamp"}, 
-                    {"m_customer", "c_credit", "Char<2>"}, 
-                    {"m_customer", "c_credit_lim", "Numeric<12, 2>"},
-                    {"m_customer", "c_discount", "Numeric<4, 4>"},
-                    {"m_customer", "c_balance", "Numeric<12, 2>"},
-                    {"m_customer", "c_ytd_paymenr", "Numeric<12, 2>"},
-                    {"m_customer", "c_payment_cnt", "Numeric<4, 0>"}, 
-                    {"m_customer", "c_delivery_cnt", "Numeric<4, 0>"},
-                    {"m_customer", "c_data", "Varchar<500>"}
-                };
-                 
-                 this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_customer", attributes));
+             //TABLESCAN MISSING
+                 for(auto const& t : this->tables)
+                {
+                    std::vector<AlgebraOperator::Attribute> attributes;
+                    
+                    for(auto const& rel: this->schema->relations)
+                    {
+                        if(rel.name == t)
+                        {
+                            for(auto const& attr : rel.attributes)
+                            {
+                                attributes.push_back({"m_" + t, attr.name, typeToString(attr)});
+                            }
+                        }
+                    }
+                    this->stack.push_back(std::make_shared<AlgebraOperator::TableScan>("m_"+t, attributes));
+                }
              return;
          }
          else

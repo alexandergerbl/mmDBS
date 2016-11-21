@@ -362,12 +362,12 @@ namespace AlgebraOperator
             for(int i = 0; i < this->clauses.size(); i++)
             {
                     //first always attrobute-name
-                    std::cout << "db." << this->clauses[i].table_name << "." << this->clauses[i].attribute << "()[tid]";
+                    std::cout << "db.m_" << this->clauses[i].table_name << "." << this->clauses[i].attribute << "()[tid]";
                     std::cout << " == ";
                     if(this->clauses[i].isConstant)
                         std::cout << this->clauses[i].value;
                     else
-                        std::cout << "db." << this->clauses[i].table_name2 << "." << this->clauses[i].value << "()[tid]";
+                        std::cout << "db.m_" << this->clauses[i].table_name2 << "." << this->clauses[i].value << "()[tid]";
                     
                     if(i < this->clauses.size()-1)
                         std::cout << " && ";
