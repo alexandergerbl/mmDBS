@@ -58,7 +58,7 @@ namespace AlgebraOperator
             }
             else
             {
-            std::cout << "\n\nERRORRRRRRRR print weakptr" << "\n" << std::endl;         
+                std::cout << "\n\nERRORRRRRRRR print weakptr" << "\n" << std::endl;         
             }
             
             std::vector<Attribute> intersection;
@@ -76,27 +76,27 @@ namespace AlgebraOperator
             throw std::bad_exception();
         }
         
-        void HashJoin::produce(std::shared_ptr<AlgebraOperator> parent) 
+        void HashJoin::produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) 
         {
             this->parent = parent;
             
             //TODO: Key Compare combine_hash() as templated Functor 
-            std::cout << "std::unordered_multimap<std::tuple<";
+            ss << "std::unordered_multimap<std::tuple<";
             //types
             for(auto i = 0; i < join_attributes.size(); i++)
             {
                 auto tmp_attr = join_attributes[i].first;
-                std::cout << tmp_attr.type;
+                ss << tmp_attr.type;
                 if(i < join_attributes.size()-1)
-                    std::cout << ", ";
+                    ss << ", ";
             }
             //std::cout << "Integer, Integer, Integer";
             
             //end types
-            std::cout << ">, ";
+            ss << ">, ";
             
             //change to tuple<....> <- specifiy which attributes are needed
-            std::cout << "std::tuple<";
+            ss << "std::tuple<";
             
             std::vector<Attribute> value_attributes;
             if(auto sp_parent = this->parent.lock())
@@ -120,21 +120,21 @@ namespace AlgebraOperator
             
             for(auto i = 0; i < value_attributes.size(); i++)
             {
-                std::cout << " " << value_attributes[i].type;
+                ss << " " << value_attributes[i].type;
                 if(i < value_attributes.size() - 1)
-                    std::cout << ", ";
+                    ss << ", ";
             }
             
             // Insert RESULT Types 
-            std::cout << ">";
+            ss << ">";
             
-            std::cout << ", IntIntIntHash> ";//TODO combine_hash from num Int
+            ss << ", IntIntIntHash> ";//TODO combine_hash from num Int
             
-            std::cout << "join_";
-            std::cout << this->join_attributes[0].first.table_name << "_";
-            std::cout << this->join_attributes[0].second.table_name << "_HT;" << std::endl;
-            left->produce(shared_from_this());
-            right->produce(shared_from_this());
+            ss << "join_";
+            ss << this->join_attributes[0].first.table_name << "_";
+            ss << this->join_attributes[0].second.table_name << "_HT;" << std::endl;
+            left->produce(shared_from_this(), ss);
+            right->produce(shared_from_this(), ss);
         
         }
         
@@ -171,30 +171,30 @@ namespace AlgebraOperator
         
         
         
-        void HashJoin::consume(std::shared_ptr<AlgebraOperator> curr) 
+        void HashJoin::consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) 
         {
             //only for left
             if(curr == left)
             {
                 //if(std::dynamic_pointer_cast<HashJoin>(left) == nullptr)
                 {
-                    std::cout << "join_";
-                    std::cout << this->join_attributes[0].first.table_name << "_";
-                    std::cout << this->join_attributes[0].second.table_name << "_HT";
-                    std::cout << ".emplace(std::make_tuple(";
+                    ss << "join_";
+                    ss << this->join_attributes[0].first.table_name << "_";
+                    ss << this->join_attributes[0].second.table_name << "_HT";
+                    ss << ".emplace(std::make_tuple(";
                     for(auto i = 0; i < this->join_attributes.size(); i++)
                     {
-                        std::cout << "db." << this->join_attributes[i].first.table_name << ".";
-                        std::cout << this->join_attributes[i].first.attribute_name << "()[tid]";
+                        ss << "db." << this->join_attributes[i].first.table_name << ".";
+                        ss << this->join_attributes[i].first.attribute_name << "()[tid]";
                         if(i < this->join_attributes.size()-1)
-                            std::cout << ", ";
+                            ss << ", ";
                     }
-                    std::cout << "), ";
+                    ss << "), ";
                 if(std::dynamic_pointer_cast<HashJoin>(left) != nullptr)
                 {
-                    std::cout << "std::tuple_cat(it->second, ";
+                    ss << "std::tuple_cat(it->second, ";
                 }
-                    std::cout << "std::make_tuple(";
+                    ss << "std::make_tuple(";
                     //TODO
         //----------------------------------------------------------
         // get attributes that will be generated by this operator
@@ -237,47 +237,47 @@ namespace AlgebraOperator
                     
             for(auto i = 0; i < new_value_attributes.size(); i++)
             {
-                std::cout << "db." << new_value_attributes[i].table_name << "." << new_value_attributes[i].attribute_name << "()[tid]";
+                ss << "db." << new_value_attributes[i].table_name << "." << new_value_attributes[i].attribute_name << "()[tid]";
                 if(i < new_value_attributes.size() - 1)
-                    std::cout << ", ";
+                    ss << ", ";
             }
             //----------------------------------------------------------
-                    std::cout << "))";
+                    ss << "))";
                     if(std::dynamic_pointer_cast<HashJoin>(left) != nullptr)
-                        std::cout << ")" << std::endl;
-                    std::cout << ";" << std::endl;
+                        ss << ")" << std::endl;
+                    ss << ";" << std::endl;
                 }
             }
             else
             {
-                std::cout <<"auto range = ";
-                std::cout << "join_";
-                std::cout << this->join_attributes[0].first.table_name << "_";
-                std::cout << this->join_attributes[0].second.table_name << "_HT";
+                ss <<"auto range = ";
+                ss << "join_";
+                ss << this->join_attributes[0].first.table_name << "_";
+                ss << this->join_attributes[0].second.table_name << "_HT";
                 
-                std::cout << ".equal_range(std::make_tuple(";
+                ss << ".equal_range(std::make_tuple(";
                 
                 for(auto i = 0; i < this->join_attributes.size(); i++)
                 {
-                    std::cout << "db." << this->join_attributes[i].second.table_name << ".";
-                    std::cout << this->join_attributes[i].second.attribute_name << "()[tid]";
+                    ss << "db." << this->join_attributes[i].second.table_name << ".";
+                    ss << this->join_attributes[i].second.attribute_name << "()[tid]";
                     if(i < this->join_attributes.size()-1)
-                        std::cout << ", ";
+                        ss << ", ";
                 }
                 
                 
-                std::cout << "));" << std::endl;
-                std::cout << "for(auto it = range.first; it != range.second; ++it)\n{\n" << std::endl;
+                ss << "));" << std::endl;
+                ss << "for(auto it = range.first; it != range.second; ++it)\n{\n" << std::endl;
                 
                 
                 if(auto sp_parent = this->parent.lock())
                 {
                     //if(std::dynamic_pointer_cast<Print>(sp_parent) == nullptr)
-                    //       std::cout << "store t_tmp and t_b in HT_b" << std::endl;
+                    //       ss << "store t_tmp and t_b in HT_b" << std::endl;
                     
-                    sp_parent->consume(shared_from_this());                
+                    sp_parent->consume(shared_from_this(), ss);                
                 }
-                std::cout << "}\n" << std::endl; 
+                ss << "}\n" << std::endl; 
             }
         }
 
@@ -304,16 +304,16 @@ namespace AlgebraOperator
             throw std::bad_exception();
         }
         
-        void TableScan::produce(std::shared_ptr<AlgebraOperator> parent) 
+        void TableScan::produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) 
         {
             this->parent = parent;
-            std::cout << "for(auto tid = 0; tid < db.";
-            std::cout << this->table_name << ".size(); tid++)\n{" << std::endl;
+            ss << "for(auto tid = 0; tid < db.";
+            ss << this->table_name << ".size(); tid++)\n{" << std::endl;
             if(auto sp_parent = this->parent.lock())
-                sp_parent->consume(shared_from_this());
-            std::cout << "}\n" << std::endl;
+                sp_parent->consume(shared_from_this(), ss);
+            ss << "}\n" << std::endl;
         }
-        void TableScan::consume(std::shared_ptr<AlgebraOperator> curr) 
+        void TableScan::consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) 
         {
             //Nothing to do here
         }
@@ -350,33 +350,33 @@ namespace AlgebraOperator
                 throw std::bad_exception();
         }
         
-        void Selection::produce(std::shared_ptr<AlgebraOperator> parent) 
+        void Selection::produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) 
         {
             this->parent = parent;
-            input->produce(shared_from_this());
+            input->produce(shared_from_this(), ss);
         }
-        void Selection::consume(std::shared_ptr<AlgebraOperator> curr) 
+        void Selection::consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) 
         {
-            std::cout << "\tif(";
+            ss << "\tif(";
             
             for(int i = 0; i < this->clauses.size(); i++)
             {
                     //first always attrobute-name
-                    std::cout << "db.m_" << this->clauses[i].table_name << "." << this->clauses[i].attribute << "()[tid]";
-                    std::cout << " == ";
+                    ss << "db.m_" << this->clauses[i].table_name << "." << this->clauses[i].attribute << "()[tid]";
+                    ss << " == ";
                     if(this->clauses[i].isConstant)
-                        std::cout << this->clauses[i].value;
+                        ss << this->clauses[i].value;
                     else
-                        std::cout << "db.m_" << this->clauses[i].table_name2 << "." << this->clauses[i].value << "()[tid]";
+                        ss << "db.m_" << this->clauses[i].table_name2 << "." << this->clauses[i].value << "()[tid]";
                     
                     if(i < this->clauses.size()-1)
-                        std::cout << " && ";
+                        ss << " && ";
             }
             
-            std::cout << ")\n\t{" << std::endl;
+            ss << ")\n\t{" << std::endl;
             if(auto sp_parent = parent.lock())
-                sp_parent->consume(shared_from_this());
-            std::cout << "\n\t}" << std::endl;
+                sp_parent->consume(shared_from_this(), ss);
+            ss << "\n\t}" << std::endl;
         }
         
         bool Selection::isHashJoinAbove()
@@ -409,27 +409,27 @@ namespace AlgebraOperator
         }
         
         
-        void Print::produce(std::shared_ptr<AlgebraOperator> parent) 
+        void Print::produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) 
         {
             parent = parent;
-            input->produce(shared_from_this());
+            input->produce(shared_from_this(), ss);
         };
-        void Print::consume(std::shared_ptr<AlgebraOperator> curr) 
+        void Print::consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) 
         {
-            std::cout << "\t\tstd::cout";
+            ss << "\t\tstd::cout";
             
             auto produced_by_child = input->producesAttr();
             if(this->isHashJoinAbove())
             {
                 for(auto i = 0; i < produced_by_child.size(); i++)
                 {
-                    std::cout << " << std::get<" << i << ">(it->second) << \" \" ";
+                    ss << " << std::get<" << i << ">(it->second) << \" \" ";
                     
                 }
                 
                 for(auto i = produced_by_child.size(); i < this->attributes.size(); i++)
                 {
-                    std::cout << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                    ss << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
                 }
             }
             else
@@ -438,10 +438,10 @@ namespace AlgebraOperator
                 auto produced_by_child = input->producesAttr();
                 for(auto i = 0; i < this->attributes.size(); i++)
                 {
-                    std::cout << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                    ss << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
                 }
             }
-            std::cout << " << std::endl;" << std::endl;
+            ss << " << std::endl;" << std::endl;
         }
         
         bool Print::isHashJoinAbove()

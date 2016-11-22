@@ -64,7 +64,7 @@ struct QueryParser {
     
    }
    ~QueryParser() {};
-   std::unique_ptr<SQL::Schema> parse(std::string const& query);
+   std::string parse(std::string const& query);
 
    void generateOperatorTree() const;
    

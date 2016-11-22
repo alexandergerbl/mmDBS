@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <sstream>
 
 namespace AlgebraOperator
 {
@@ -32,8 +33,8 @@ namespace AlgebraOperator
         std::weak_ptr<AlgebraOperator> parent;
 
 
-        virtual void produce(std::shared_ptr<AlgebraOperator> parent) = 0;
-        virtual void consume(std::shared_ptr<AlgebraOperator> curr) = 0;
+        virtual void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) = 0;
+        virtual void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) = 0;
         //look down the algebra tree and look whats pushed upwards
         virtual std::vector<Attribute> producesAttr() = 0;
         //look up the algebra tree and get what the operators above want you to produce
@@ -72,7 +73,7 @@ namespace AlgebraOperator
         
         std::vector<Attribute> requires() override;
         
-        void produce(std::shared_ptr<AlgebraOperator> parent) override;
+        void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) override;
         
         
         
@@ -80,7 +81,7 @@ namespace AlgebraOperator
         
         
         
-        void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
     };
@@ -117,9 +118,9 @@ namespace AlgebraOperator
         
         std::vector<Attribute> requires() override;
         
-        void produce(std::shared_ptr<AlgebraOperator> parent) override;
+        void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) override;
         
-        void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
     };
@@ -148,9 +149,9 @@ namespace AlgebraOperator
         
         std::vector<Attribute> requires() override;
         
-        void produce(std::shared_ptr<AlgebraOperator> parent) override;
+        void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) override;
         
-        void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
     };
@@ -181,9 +182,9 @@ namespace AlgebraOperator
         std::vector<Attribute> requires() override;
         
         
-        void produce(std::shared_ptr<AlgebraOperator> parent) override;
+        void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) override;
         
-        void consume(std::shared_ptr<AlgebraOperator> curr) override;
+        void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
 

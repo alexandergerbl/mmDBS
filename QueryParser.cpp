@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <unordered_map>
+#include <sstream>
 
 namespace QueryParser{
 
@@ -29,7 +30,7 @@ static bool isInt(const std::string& str) {
 }
 
 
-std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
+std::string QueryParser::parse(std::string const& query) {
    std::string token = query;
    unsigned line=1;
    std::unique_ptr<SQL::Schema> s(new SQL::Schema());
@@ -89,10 +90,11 @@ std::unique_ptr<SQL::Schema> QueryParser::parse(std::string const& query) {
        }
    }
    
-  // std::cout << "Number of elements shoulc be 2 = " << this->stack.size() << std::endl;
-   this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
+  std::stringstream os;
+   this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
    
-   return std::move(s);
+   //return std::move(s);
+   return os.str();
 }
 
 static bool isQueryIdentifier(const std::string& str) {
