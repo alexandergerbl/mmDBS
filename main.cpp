@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string>
 #include <iostream>
+#include <chrono>
 
 #include "parser/Parser.hpp"
 #include "QueryParser.hpp"
@@ -27,12 +28,10 @@ void task5(DatabaseColumn& db)
     while(1)
     {
         //1. Read query from console
-        std::string tmp_query = "select w_id from warehouse;";
+        std::string tmp_query;
         std::cout << "Enter Query:" << std::endl;
-        //std::cin.clear();
-        //std::cin.sync();
+        
 std::getline(std::cin, tmp_query);
-std::cout << "tmp_query = " << tmp_query << std::endl;
         //2. analyse query -> report error and abort, 
         //3. generate c++ Code into temporary file "tmp_query.so"
         std::ofstream file("./tmp.cpp");
@@ -50,8 +49,13 @@ std::cout << "tmp_query = " << tmp_query << std::endl;
         } catch (QueryParser::QueryParserError& e) {
             std::cerr << e.what() << std::endl;
         }    
+        auto start = std::chrono::system_clock::now();
         //4. compile *.so-file
         system("g++ -O3 -fPIC -std=c++14 -g tmp.cpp -shared -o tmp.so -lstdc++fs");
+        
+        auto end = std::chrono::system_clock::now();
+        auto compileTime = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+                
         //load query 
         void* handle=dlopen("./tmp.so",RTLD_NOW);
         if (!handle) {
@@ -64,18 +68,25 @@ std::cout << "tmp_query = " << tmp_query << std::endl;
             std::cerr << "error: " << dlerror() << std::endl;
             exit(1);
         }
+        
+        
+        start = std::chrono::system_clock::now();
+        
         //execute query
-    //CALL QUERY
         fn(db);
+        
+        end = std::chrono::system_clock::now();
+        
+        //5. measure compilation-time and execution time
+        std::cout << "\tcompilation-time:\t" << compileTime << " µs" << std::endl;
+        std::cout << "\texecution-time:\t" << std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() << " µs\n" << std::endl;
 
         if (dlclose(handle)) {
             std::cerr << "error: " << dlerror() << std::endl;
             exit(1);
         }
-        
-        
         //system("g++ -O3 -std=c++11 -g main.cpp -lrt -ldl -o run");
-        //5. measure compilation-time and execution time
+        
         
     }
 }
