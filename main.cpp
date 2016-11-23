@@ -24,7 +24,7 @@
  */
 void task5(DatabaseColumn& db)
 {
-    //while(1)
+    while(1)
     {
         //1. Read query from console
         std::string tmp_query = "select w_id from warehouse;";
@@ -43,9 +43,9 @@ std::cout << "tmp_query = " << tmp_query << std::endl;
             auto a = qp.parse(tmp_query);
             //std::cout << a << std::endl;
             //extern "C" int query() {  }
-            file << "#include <iostream>\n#include \"generatedSchema.cpp\"\n#include \"Types.hpp\"\n\nextern \"C\" void query(DatabaseColumn& db)\n{\n\n";
+            file << "#include <iostream>\n#include \"generatedSchema.cpp\"\n#include \"Types.hpp\"\n\n\nvoid real_query(DatabaseColumn& db)\n{\n\n";
             file << a;
-            file << "}\n";
+            file << "}\n\nextern \"C\" void query_wrap(DatabaseColumn& db){ real_query(db); } ";
             file.close();
         } catch (QueryParser::QueryParserError& e) {
             std::cerr << e.what() << std::endl;
@@ -59,7 +59,7 @@ std::cout << "tmp_query = " << tmp_query << std::endl;
             exit(1);
         }
 
-        auto fn=reinterpret_cast<void (*)(DatabaseColumn&)>(dlsym(handle, "query"));
+        auto fn=reinterpret_cast<void (*)(DatabaseColumn&)>(dlsym(handle, "query_wrap"));
         if (!fn) {
             std::cerr << "error: " << dlerror() << std::endl;
             exit(1);
