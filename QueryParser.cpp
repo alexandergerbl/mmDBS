@@ -383,7 +383,7 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
             state=State::WhereFurtherAttribute;
          else if(tok[0] == literal::Semicolon)
          {
-             std::cout << "Found Semicolon number of clauses = " << this->whereClauses.size() << std::endl;
+             
              for(auto const& clause : this->whereClauses)
              {
                  if(clause.isConstant)
@@ -401,7 +401,7 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                  }
                  
              }
-             std::cout << "Found Semicolon - B" << std::endl;
+             
              //TABLESCAN MISSING
                  for(auto const& t : this->tables)
                 {
