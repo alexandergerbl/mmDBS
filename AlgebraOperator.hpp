@@ -62,9 +62,13 @@ namespace AlgebraOperator
         
         std::weak_ptr<AlgebraOperator> parent;
         
+        std::string tablename_left;
+        std::string tablename_right;
+        
         std::vector<std::pair<Attribute, Attribute>> join_attributes;
         
-        HashJoin() {}
+        HashJoin(std::string left, std::string right) : tablename_left{left}, tablename_right{right} 
+        {}
 
         
         void setParent(std::shared_ptr<AlgebraOperator> sp) override;

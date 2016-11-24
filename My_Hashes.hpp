@@ -25,18 +25,18 @@ inline void hash_combine(std::size_t& seed, T const& v, Rest... rest)
 
 struct IntHash
 {
-   std::size_t operator()(Integer const& i) const
+   std::size_t operator()(std::tuple<Integer> const& i) const
    {
-       return i.hash();
+       return std::get<0>(i).hash();
    }
 };
 
 struct IntIntHash
 {
-   std::size_t operator()(std::pair<Integer, Integer> const& p) const
+   std::size_t operator()(std::tuple<Integer, Integer> const& p) const
    {
-       std::size_t seed = p.first.hash();
-       seed ^= p.second.hash() + 0x9e3779b9 + (seed << 6) + (seed>>2);
+       std::size_t seed = std::get<0>(p).hash();
+       seed ^= std::get<1>(p).hash() + 0x9e3779b9 + (seed << 6) + (seed>>2);
        return seed;
    }
 };

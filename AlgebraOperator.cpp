@@ -184,7 +184,7 @@ namespace AlgebraOperator
                     ss << ".emplace(std::make_tuple(";
                     for(auto i = 0; i < this->join_attributes.size(); i++)
                     {
-                        ss << "db." << this->join_attributes[i].first.table_name << ".";
+                        ss << "db.m_" << this->join_attributes[i].first.table_name << ".";
                         ss << this->join_attributes[i].first.attribute_name << "()[tid]";
                         if(i < this->join_attributes.size()-1)
                             ss << ", ";
@@ -237,7 +237,7 @@ namespace AlgebraOperator
                     
             for(auto i = 0; i < new_value_attributes.size(); i++)
             {
-                ss << "db." << new_value_attributes[i].table_name << "." << new_value_attributes[i].attribute_name << "()[tid]";
+                ss << "db.m_" << new_value_attributes[i].table_name << "." << new_value_attributes[i].attribute_name << "()[tid]";
                 if(i < new_value_attributes.size() - 1)
                     ss << ", ";
             }
@@ -259,7 +259,7 @@ namespace AlgebraOperator
                 
                 for(auto i = 0; i < this->join_attributes.size(); i++)
                 {
-                    ss << "db." << this->join_attributes[i].second.table_name << ".";
+                    ss << "db.m_" << this->join_attributes[i].second.table_name << ".";
                     ss << this->join_attributes[i].second.attribute_name << "()[tid]";
                     if(i < this->join_attributes.size()-1)
                         ss << ", ";
@@ -307,7 +307,7 @@ namespace AlgebraOperator
         void TableScan::produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) 
         {
             this->parent = parent;
-            ss << "for(auto tid = 0; tid < db.";
+            ss << "for(auto tid = 0; tid < db.m_";
             ss << this->table_name << ".size(); tid++)\n{" << std::endl;
             if(auto sp_parent = this->parent.lock())
                 sp_parent->consume(shared_from_this(), ss);
