@@ -96,7 +96,7 @@ std::string QueryParser::parse(std::string const& query) {
        
        
    }
-   /*
+   
    std::cout << "this stack size = " << this->stack.size() << std::endl;
    for(auto i = 0; i < this->stack.size(); i++)
    {
@@ -109,7 +109,7 @@ std::string QueryParser::parse(std::string const& query) {
        if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr)
            std::cout << i << " Selection " << std::endl;
    }
-   */
+   
    //get first and last hashJoin
    auto firstHJ = std::find_if(this->stack.begin(), this->stack.end(), [&](std::shared_ptr<AlgebraOperator::AlgebraOperator>& a) { return (std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(a) != nullptr); });
    //reverse range of hashJoins
@@ -231,31 +231,8 @@ std::string QueryParser::parse(std::string const& query) {
        }
    }
    
-   
-   // THIS STACK 
-   /*
-   for(int i = 0; i < this->stack.size(); i++)
-   {
-       if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) == nullptr)
-       {
-           //no hashjoin
-           if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr)
-           {
-               std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->input = this->stack[i+1];
-           }
-           if(std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i]) != nullptr)
-           {
-               std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i])->input = this->stack[i+1];
-           }
-       }
-       else
-       {
-           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = this->stack[i+1];
-           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->right = this->stack[i+2];
-       }
-   }
-   */
   std::stringstream os;
+  this->stack[0]->setParent(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
    
    

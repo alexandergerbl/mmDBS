@@ -21,6 +21,7 @@ namespace AlgebraOperator
         
         void HashJoin::setParent(std::shared_ptr<AlgebraOperator> sp) 
         {
+            std::cout << "setParent: hashjoin" << std::endl;
             this->parent = sp;
             this->left->setParent(shared_from_this());
             this->right->setParent(shared_from_this());
@@ -48,7 +49,8 @@ namespace AlgebraOperator
                     std::for_each(left_tmp.begin(), left_tmp.end(), [&](Attribute attr){ produced.insert(attr);});
             
             }
-            
+            std::cout << "Table name1 = " << this->tablename_left << "; table name2 = " << this->tablename_right << std::endl;
+            std::cout << "AlgebraOperator.cpp line 62: no parent   Table1 ptr = " << this->left << "; table name2 = " << this->right << std::endl;
             std::set<Attribute> required;
             //get attributes that parents require
             if(auto sp_parent = this->parent.lock())
@@ -128,7 +130,11 @@ namespace AlgebraOperator
             // Insert RESULT Types 
             ss << ">";
             
-            ss << ", IntIntIntHash> ";//TODO combine_hash from num Int
+            ss << ", ";
+            for(auto i = 0; i < join_attributes.size(); i++)
+                ss << "Int";
+            //ss << "IntIntInt";
+            ss << "Hash> ";//TODO combine_hash from num Int
             
             ss << "join_";
             ss << this->join_attributes[0].first.table_name << "_";
@@ -289,6 +295,7 @@ namespace AlgebraOperator
         
         void TableScan::setParent(std::shared_ptr<AlgebraOperator> sp) 
         {
+            std::cout << "setParent: tablescan" << std::endl;
             this->parent = sp;
         }
         
@@ -332,6 +339,7 @@ namespace AlgebraOperator
         
         void Selection::setParent(std::shared_ptr<AlgebraOperator> sp) 
         {
+            std::cout << "setParent: selection" << std::endl;
             this->parent = sp;
             input->setParent(shared_from_this());
         }
@@ -393,6 +401,7 @@ namespace AlgebraOperator
          */
         void Print::setParent(std::shared_ptr<AlgebraOperator> sp) 
         {
+            std::cout << "setParent: print" << std::endl;
             this->parent = sp;
             input->setParent(shared_from_this());
         }
