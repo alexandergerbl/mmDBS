@@ -51,7 +51,7 @@ bool QueryParser::requiresCrossProduct() const
     {
         if(!this->whereClauses[i].isConstant)
         {
-            joins.erase(std::remove_if(joins.begin(), joins.end(), [&](std::pair<std::string, std::string> const& tmp){ return tmp == std::make_pair(this->whereClauses[i].table_name, this->whereClauses[i].table_name2); } ), joins.end());
+            joins.erase(std::remove_if(joins.begin(), joins.end(), [&](std::pair<std::string, std::string> const& tmp){ return ((tmp == std::make_pair(this->whereClauses[i].table_name, this->whereClauses[i].table_name2)) || (std::make_pair(this->whereClauses[i].table_name, this->whereClauses[i].table_name2) == tmp)); } ), joins.end());
         }
     }
     
