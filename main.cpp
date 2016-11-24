@@ -28,10 +28,10 @@ void task5(DatabaseColumn& db)
     while(1)
     {
         //1. Read query from console
-        std::string tmp_query;
+        std::string tmp_query;// = "select c_last, o_id, ol_dist_info from customer, order, orderline where c_id = o_c_id and o_id = ol_o_id and ol_d_id = o_d_id and o_w_id = ol_w_id and ol_number = 1 and ol_o_id = 100;";
         std::cout << "Enter Query:" << std::endl;
         
-std::getline(std::cin, tmp_query);
+        std::getline(std::cin, tmp_query);
         //2. analyse query -> report error and abort, 
         //3. generate c++ Code into temporary file "tmp_query.so"
         std::ofstream file("./tmp.cpp");

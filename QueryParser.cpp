@@ -96,7 +96,7 @@ std::string QueryParser::parse(std::string const& query) {
        
        
    }
-   
+   /*
    std::cout << "this stack size = " << this->stack.size() << std::endl;
    for(auto i = 0; i < this->stack.size(); i++)
    {
@@ -109,128 +109,162 @@ std::string QueryParser::parse(std::string const& query) {
        if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr)
            std::cout << i << " Selection " << std::endl;
    }
-   
+   */
    //get first and last hashJoin
    auto firstHJ = std::find_if(this->stack.begin(), this->stack.end(), [&](std::shared_ptr<AlgebraOperator::AlgebraOperator>& a) { return (std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(a) != nullptr); });
    //reverse range of hashJoins
    
    std::unordered_map<std::string, std::shared_ptr<AlgebraOperator::AlgebraOperator>> lastUsed;
-   
    if(firstHJ != this->stack.end())
    {
-       auto last = firstHJ;
-        for(auto it = firstHJ; std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(*it) != nullptr; it++)
-        {
-            last = it;
-        }
-        //reverse that range
-        std::reverse(firstHJ, last);
-   }
-   for(auto i = 0; i < this->stack.size(); i++)
-   {
-       if(std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i]) != nullptr)
-           std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i])->input = this->stack[i+1];
-       else if((std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) != nullptr) && (std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]) != nullptr))
-       {
-                std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]);
-
-                lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]);
-       }
-       else
-       {
-           //only selections and tablescans left
-            if((std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) != nullptr))
+    if(firstHJ != this->stack.end())
+    {
+        auto last = firstHJ;
+            for(auto it = firstHJ; std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(*it) != nullptr; it++)
             {
-                    //last HashJoin
-                lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
-                lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+                last = it;
             }
+            //reverse that range
+            if(std::distance(firstHJ, last) != 0)
+                std::reverse(firstHJ, last+1);
+    }
+    for(auto i = 0; i < this->stack.size(); i++)
+    {
+        if(std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i]) != nullptr)
+            std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i])->input = this->stack[i+1];
+        else if((std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) != nullptr) && (std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]) != nullptr))
+        {
+                    std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]);
+                    
+                    //lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+        }
+        else
+        {
+            //only selections and tablescans left
+                if((std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) != nullptr))
+                {
+                        //last HashJoin
+                    //std::cout << "lowest hash join " << std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left << " right " << std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right << std::endl;
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+                }
+                /*
+                * 
+                * if is selection 
+                * 
+                * 
+                */
+            if((std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr))
+            {
+                
+                auto lastOp = lastUsed.at(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name);
+                //check if was HashJoin then check whether to add to left or right side
+                if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
+                {
+                    
+                    if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left == std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name)
+                    {
+
+                        std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->left = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                        lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                    }
+                    else
+                    {
+
+                        std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->right = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                        lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                    }
+                }
+                //if selection
+                if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp) != nullptr)
+                {
+                    
+                    std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
+                }
+                //if print
+                if(std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp) != nullptr)
+                {
+                    
+                    std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
+                }
+                //Table
+                if(std::dynamic_pointer_cast<AlgebraOperator::TableScan>(lastOp) != nullptr)
+                {
+                    
+                    std::dynamic_pointer_cast<AlgebraOperator::TableScan>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
+                }
+            }
+            //if TableScan just add to last last use 
             /*
-            * 
-            * if is selection 
-            * 
-            * 
-            */
-           if((std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr))
-           {
-               
-               auto lastOp = lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name];
-               //check if was HashJoin then check whether to add to left or right side
-               if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
-               {
-                   
-                   if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left == std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name)
-                   {
-                       std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->left = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                       lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                   }
-                   else
-                   {
-                       std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->right = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                       lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                   }
-               }
-               //if selection
-               if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp) != nullptr)
-               {
-                   
-                   std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                   lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
-               }
-               //if print
-               if(std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp) != nullptr)
-               {
-                   
-                   std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                   lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
-               }
-               //Table
-               if(std::dynamic_pointer_cast<AlgebraOperator::TableScan>(lastOp) != nullptr)
-               {
-                   
-                   std::dynamic_pointer_cast<AlgebraOperator::TableScan>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]);
-                   lastUsed[std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name] = this->stack[i];
-               }
-           }
-           //if TableScan just add to last last use 
-           /*
-            * 
-            * if is tablescan 
-            * 
-            * 
-            */
-           if((std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]) != nullptr))
-           {
-               //wont reach this point
-               auto lastOp = lastUsed[std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name];
-               
-               if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
-               {
-                   if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left == std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name)
-                   {
-                       std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->left = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
-                   }
-                   else
-                   {
-                       std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->right = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
-                   }
-               }
-               //if selection
-               if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp) != nullptr)
-               {
-                   std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
-                   lastUsed[std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name] = this->stack[i];
-               }
-               //if print
-               if(std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp) != nullptr)
-               {
-                   std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
-                   lastUsed[std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name] = this->stack[i];
-               }
-           }
-       }
+                * 
+                * if is tablescan 
+                * 
+                * 
+                */
+            if((std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]) != nullptr))
+            {
+                //wont reach this point
+                
+                auto lastOp = lastUsed.at(std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name);
+                
+                if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
+                {
+                    if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left == std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name)
+                    {
+                        
+                        std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->left = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
+                    }
+                    else
+                    {
+                        
+                        std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->right = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
+                    }
+                }
+                //if selection
+                if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp) != nullptr)
+                {
+                    std::dynamic_pointer_cast<AlgebraOperator::Selection>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name] = this->stack[i];
+                }
+                //if print
+                if(std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp) != nullptr)
+                {
+                    std::dynamic_pointer_cast<AlgebraOperator::Print>(lastOp)->input = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
+                    lastUsed[std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name] = this->stack[i];
+                }
+            }
+        }
+    }
    }
-   
+   else
+   {
+       //do old concat
+       // THIS STACK 
+    for(int i = 0; i < this->stack.size(); i++)
+    {
+        if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) == nullptr)
+        {
+            //no hashjoin
+            if(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr)
+            {
+                std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->input = this->stack[i+1];
+            }
+            if(std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i]) != nullptr)
+            {
+                std::dynamic_pointer_cast<AlgebraOperator::Print>(this->stack[i])->input = this->stack[i+1];
+            }
+        }
+        else
+        {
+            std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = this->stack[i+1];
+            std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->right = this->stack[i+2];
+        }
+    }
+   }
   std::stringstream os;
   this->stack[0]->setParent(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
