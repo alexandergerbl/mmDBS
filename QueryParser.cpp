@@ -8,6 +8,10 @@
 #include <cstdlib>
 #include <unordered_map>
 #include <sstream>
+#include <exception>
+
+
+
 
 namespace QueryParser{
 
@@ -29,6 +33,30 @@ static bool isInt(const std::string& str) {
    return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
+/*
+ * check whether join attributes exists
+ * 
+ */
+bool QueryParser::requiresCrossProduct() const
+{
+    //create a pair for every join that must exist e.g. (A x B), (B x C),...
+    std::vector<std::pair<std::string, std::string>> joins;
+ 
+    for(auto i = 0; i < this->tables.size()-1; i++)
+    {
+        joins.push_back(std::make_pair(this->tables[i], this->tables[i+1]));
+    }
+    //check whether all table have a join attribute
+    for(auto i = 0; i < this->whereClauses.size(); i++)
+    {
+        if(!this->whereClauses[i].isConstant)
+        {
+            joins.erase(std::remove_if(joins.begin(), joins.end(), [&](std::pair<std::string, std::string> const& tmp){ return tmp == std::make_pair(this->whereClauses[i].table_name, this->whereClauses[i].table_name2); } ), joins.end());
+        }
+    }
+    
+    return !joins.empty();
+}
 
 std::string QueryParser::parse(std::string const& query) {
    std::string token = query;
@@ -85,13 +113,18 @@ std::string QueryParser::parse(std::string const& query) {
        }
        else
        {
-           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = this->stack[+1];
-           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->right = this->stack[+2];
+           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = this->stack[i+1];
+           std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->right = this->stack[i+2];
        }
    }
    
   std::stringstream os;
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
+   
+   if(this->requiresCrossProduct())
+   {
+       throw MissingJoinAttributeException();
+   }
    
    //return std::move(s);
    return os.str();

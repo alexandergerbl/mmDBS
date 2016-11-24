@@ -48,7 +48,12 @@ std::getline(std::cin, tmp_query);
             file.close();
         } catch (QueryParser::QueryParserError& e) {
             std::cerr << e.what() << std::endl;
-        }    
+            return;
+        } catch (QueryParser::MissingJoinAttributeException& e) {
+            std::cerr << e.what() << std::endl;
+            return;
+        } 
+        
         auto start = std::chrono::system_clock::now();
         //4. compile *.so-file
         system("g++ -O3 -fPIC -std=c++14 -g tmp.cpp -shared -o tmp.so -lstdc++fs");

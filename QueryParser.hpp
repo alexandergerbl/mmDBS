@@ -19,6 +19,15 @@
 
 namespace QueryParser{
 
+class MissingJoinAttributeException : std::exception
+{
+public:
+    const char* what() const throw()
+    {
+        return "Missing Join Attributes -> Would require Cross Product!";
+    }
+};
+    
 class QueryParserError : std::exception {
    std::string msg;
    unsigned line;
@@ -75,6 +84,8 @@ struct QueryParser {
    //doesnt really belong to parser, but only one function
    std::vector<Clause> getJoinAttributes(std::string table_name1, std::string table_name2) const;
    std::vector<Clause> getSelectionClauses() const;
+   
+   bool requiresCrossProduct() const;
 };
 
 };
