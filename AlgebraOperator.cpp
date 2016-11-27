@@ -466,19 +466,30 @@ namespace AlgebraOperator
     
                 return (left_search == input_attr_l.end());// && (right_search == input_attr_r.end());
             }), produced_by_child.end());
-            std::cout << "Produced child size = " << produced_by_child.size() << std::endl;
+            
             //EEND
             if(hj != std::shared_ptr<HashJoin>(nullptr))
             {
+                auto attributes_copy = this->attributes;
+                    
+                //remove attributes that arent produced by input
+                attributes_copy.erase(std::remove_if(attributes_copy.begin(), attributes_copy.end(), [&](Attribute const& attr){ 
+                    auto left_search = std::find(produced_by_child.begin(), produced_by_child.end(), attr);            
+                //   auto right_search = std::find(input_attr_r.begin(), input_attr_r.end(), attr);
+        
+                    return (left_search != produced_by_child.end());// && (right_search == input_attr_r.end());
+                }), attributes_copy.end());
+                
+                
                 for(auto i = 0; i < produced_by_child.size(); i++)
                 {
                     ss << " << std::get<" << i << ">(it->second) << \" \" ";
                     
                 }
                                 
-                for(auto i = produced_by_child.size(); i < this->attributes.size(); i++)
+                for(auto i = 0; i < attributes_copy.size(); i++)
                 {
-                    ss << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            
+                    ss << " << db.m_" << attributes_copy[i].table_name << "." << attributes_copy[i].attribute_name << "()[" << "tid" << "] << \" \"";            
                 }
             }
             else

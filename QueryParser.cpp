@@ -277,7 +277,7 @@ std::string QueryParser::parse(std::string const& query) {
            allEqual.insert(print->attributes[0]);
            while(lastSize != allEqual.size())
            {
-               std::cout << "lastSize " << lastSize << std::endl;
+               
                 lastSize = allEqual.size();
                 
                 for(auto const& eq : allEqual)
