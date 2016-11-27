@@ -25,7 +25,8 @@ namespace AlgebraOperator
     };
 
     class Print;
-
+    class HashJoin;
+    
     class AlgebraOperator
     {
     public:
@@ -44,6 +45,8 @@ namespace AlgebraOperator
         virtual void setParent(std::shared_ptr<AlgebraOperator> sp) = 0;
         
         virtual bool isHashJoinAbove() = 0;
+        
+        virtual std::shared_ptr<HashJoin> getNextHashJoin() = 0;
     };
 
 
@@ -79,7 +82,7 @@ namespace AlgebraOperator
         
         void produce(std::shared_ptr<AlgebraOperator> parent, std::stringstream& ss) override;
         
-        
+        std::shared_ptr<HashJoin> getNextHashJoin() override;
         
         std::vector<Attribute> addToValueOfHT(std::shared_ptr<HashJoin> curr);
         
@@ -127,6 +130,8 @@ namespace AlgebraOperator
         void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
+        
+        std::shared_ptr<HashJoin> getNextHashJoin() override;
     };
 
     /*
@@ -158,6 +163,8 @@ namespace AlgebraOperator
         void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
+        
+        std::shared_ptr<HashJoin> getNextHashJoin() override;
     };
 
     /*
@@ -191,6 +198,8 @@ namespace AlgebraOperator
         void consume(std::shared_ptr<AlgebraOperator> curr, std::stringstream& ss) override;
         
         bool isHashJoinAbove() override;
+        
+        std::shared_ptr<HashJoin> getNextHashJoin() override;
 
     };
 

@@ -26,6 +26,27 @@ namespace AlgebraOperator
             this->right->setParent(shared_from_this());
         }
         
+        std::shared_ptr<HashJoin> HashJoin::getNextHashJoin()
+        {
+            return shared_from_this();
+        }
+
+        std::shared_ptr<HashJoin> TableScan::getNextHashJoin()
+        {
+            return std::shared_ptr<HashJoin>(nullptr);
+        }
+
+        std::shared_ptr<HashJoin> Selection::getNextHashJoin()
+        {
+            return this->input->getNextHashJoin();
+        }
+        
+        std::shared_ptr<HashJoin> Print::getNextHashJoin()
+        {
+            return this->input->getNextHashJoin();
+        }
+
+
         
         std::vector<Attribute> HashJoin::producesAttr() 
         {
@@ -120,7 +141,7 @@ namespace AlgebraOperator
             
             for(auto i = 0; i < value_attributes.size(); i++)
             {
-                ss << " " << value_attributes[i].type;
+                ss << value_attributes[i].type;
                 if(i < value_attributes.size() - 1)
                     ss << ", ";
             }
@@ -188,8 +209,11 @@ namespace AlgebraOperator
                     ss << ".emplace(std::make_tuple(";
                     for(auto i = 0; i < this->join_attributes.size(); i++)
                     {
-                        ss << "db.m_" << this->join_attributes[i].first.table_name << ".";
-                        ss << this->join_attributes[i].first.attribute_name << "()[tid]";
+                        ss << "db.m_";
+                        
+                        ss << this->join_attributes[i].first.table_name << ".";
+                        ss << this->join_attributes[i].first.attribute_name;
+                        ss<< "()[tid]";
                         if(i < this->join_attributes.size()-1)
                             ss << ", ";
                     }
@@ -425,14 +449,33 @@ namespace AlgebraOperator
             ss << "\t\tstd::cout";
             
             auto produced_by_child = input->producesAttr();
-            if(this->isHashJoinAbove())
+            auto hj = this->getNextHashJoin();
+            
+            //START
+            
+            
+            produced_by_child = this->requires();
+            
+            auto input_attr_l = hj->left->producesAttr();
+        // auto input_attr_r = this->right->producesAttr();
+    
+            //remove attributes that arent produced by input
+            produced_by_child.erase(std::remove_if(produced_by_child.begin(), produced_by_child.end(), [&](Attribute const& attr){ 
+                auto left_search = std::find(input_attr_l.begin(), input_attr_l.end(), attr);            
+            //   auto right_search = std::find(input_attr_r.begin(), input_attr_r.end(), attr);
+    
+                return (left_search == input_attr_l.end());// && (right_search == input_attr_r.end());
+            }), produced_by_child.end());
+            std::cout << "Produced child size = " << produced_by_child.size() << std::endl;
+            //EEND
+            if(hj != std::shared_ptr<HashJoin>(nullptr))
             {
                 for(auto i = 0; i < produced_by_child.size(); i++)
                 {
                     ss << " << std::get<" << i << ">(it->second) << \" \" ";
                     
                 }
-                
+                                
                 for(auto i = produced_by_child.size(); i < this->attributes.size(); i++)
                 {
                     ss << " << db.m_" << this->attributes[i].table_name << "." << this->attributes[i].attribute_name << "()[" << "tid" << "] << \" \"";            

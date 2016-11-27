@@ -10,7 +10,7 @@
 #include <sstream>
 #include <exception>
 
-
+#include<set>
 
 
 namespace QueryParser{
@@ -264,7 +264,45 @@ std::string QueryParser::parse(std::string const& query) {
   this->stack[0]->setParent(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
    
-   
+   //after setting up tree rename print tablename and attributes if hashJoin exists
+   if(this->stack[0]->getNextHashJoin() != std::shared_ptr<AlgebraOperator::HashJoin>(nullptr))
+   {
+       auto HJ = this->stack[0]->getNextHashJoin();
+       auto print = std::static_pointer_cast<AlgebraOperator::Print>(this->stack[0]);
+       std::set<AlgebraOperator::Attribute> allEqual;
+       for(auto i = 0; i < print->attributes.size(); i++)
+       {
+           allEqual.clear();
+           int lastSize = allEqual.size();
+           allEqual.insert(print->attributes[0]);
+           while(lastSize != allEqual.size())
+           {
+               std::cout << "lastSize " << lastSize << std::endl;
+                lastSize = allEqual.size();
+                
+                for(auto const& eq : allEqual)
+                {
+                    for(auto const& cl :  this->whereClauses)
+                    {
+                        if(!cl.isConstant)
+                        {
+                            if(eq.table_name == cl.table_name)
+                                allEqual.insert({cl.table_name, cl.attribute, this->schema->getType(cl.table_name, cl.attribute)});
+                            if(eq.table_name == cl.table_name2)
+                                allEqual.insert({cl.table_name2, cl.value, this->schema->getType(cl.table_name2, cl.value)});
+                        }
+                        
+                    }
+                }
+           }
+           auto s = std::find_if(allEqual.begin(), allEqual.end(), [&](auto tmp){ return (tmp.table_name == HJ->tablename_right); });
+           if(s != allEqual.end())
+            {
+                //substitute print attribute
+                print->attributes[i] = *s;
+            }
+       }
+   }
    
    
    if(this->requiresCrossProduct())
@@ -549,10 +587,21 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                      
                      //search specific HashJoin and add joinattribute
                      if(clause.table_name < clause.table_name2)
-                         this->getHashJoin[std::make_pair(clause.table_name, clause.table_name2)]->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
+                     {
+                         auto& hj = this->getHashJoin[std::make_pair(clause.table_name, clause.table_name2)];
+                         if(clause.table_name == hj->tablename_left)
+                             hj->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
+                         else
+                             hj->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}));
+                     }
                      else
-                         this->getHashJoin[std::make_pair(clause.table_name2, clause.table_name)]->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
-                     
+                     {
+                         auto& hj = this->getHashJoin[std::make_pair(clause.table_name2, clause.table_name)];
+                         if(clause.table_name == hj->tablename_left)
+                             hj->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}));
+                         else
+                             hj->join_attributes.emplace_back(std::make_pair<AlgebraOperator::Attribute, AlgebraOperator::Attribute>({clause.table_name2, clause.value, this->schema->getType(clause.table_name, clause.attribute)}, {clause.table_name, clause.attribute, this->schema->getType(clause.table_name, clause.attribute)}));
+                     }
                  }
                  
              }

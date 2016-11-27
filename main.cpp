@@ -100,6 +100,29 @@ void task5(DatabaseColumn& db)
 int main()
 {
 	DatabaseColumn db;
+    
+    
+std::unordered_multimap<std::tuple<Integer, Integer>, std::tuple< Varchar<10>>, IntIntHash> join_district_order_HT;
+for(auto tid = 0; tid < db.m_district.size(); tid++)
+{
+join_district_order_HT.emplace(std::make_tuple(db.m_district.d_w_id()[tid], db.m_district.d_id()[tid]), std::make_tuple(db.m_district.d_name()[tid]));
+}
+
+for(auto tid = 0; tid < db.m_order.size(); tid++)
+{
+	if(db.m_order.o_id()[tid] == 7)
+	{
+auto range = join_district_order_HT.equal_range(std::make_tuple(db.m_order.o_w_id()[tid], db.m_order.o_d_id()[tid]));
+for(auto it = range.first; it != range.second; ++it)
+{
+
+		std::cout << std::get<0>(it->second) << " " << std::endl;
+}
+
+
+	}
+}
+
 
     task5(db);
     
