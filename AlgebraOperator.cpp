@@ -481,16 +481,21 @@ namespace AlgebraOperator
                 }), attributes_copy.end());
                 
                 
-                for(auto i = 0; i < produced_by_child.size(); i++)
+                                
+                for(auto& attr : this->attributes)
                 {
-                    ss << " << std::get<" << i << ">(it->second) << \" \" ";
+                    auto search = std::find(produced_by_child.begin(), produced_by_child.end(), attr);
+                    if(search != produced_by_child.end())
+                    {
+                        ss << " << std::get<" << std::distance(produced_by_child.begin(), search) << ">(it->second) << \" \" ";
+                    }
+                    else
+                    {
+                        ss << " << db.m_" << attr.table_name << "." << attr.attribute_name << "()[" << "tid" << "] << \" \"";            
+                    }
                     
                 }
-                                
-                for(auto i = 0; i < attributes_copy.size(); i++)
-                {
-                    ss << " << db.m_" << attributes_copy[i].table_name << "." << attributes_copy[i].attribute_name << "()[" << "tid" << "] << \" \"";            
-                }
+                
             }
             else
             {
