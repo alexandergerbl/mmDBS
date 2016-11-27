@@ -136,7 +136,7 @@ std::string QueryParser::parse(std::string const& query) {
         {
                     std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->left = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]);
                     
-                    //lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
+                    //lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i+1]);
                     lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
         }
         else
@@ -145,7 +145,6 @@ std::string QueryParser::parse(std::string const& query) {
                 if((std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]) != nullptr))
                 {
                         //last HashJoin
-                    //std::cout << "lowest hash join " << std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left << " right " << std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right << std::endl;
                     lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_left] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
                     lastUsed[std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i])->tablename_right] = std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(this->stack[i]);
                 }
@@ -157,7 +156,6 @@ std::string QueryParser::parse(std::string const& query) {
                 */
             if((std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i]) != nullptr))
             {
-                
                 auto lastOp = lastUsed.at(std::dynamic_pointer_cast<AlgebraOperator::Selection>(this->stack[i])->clauses[0].table_name);
                 //check if was HashJoin then check whether to add to left or right side
                 if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
@@ -207,20 +205,16 @@ std::string QueryParser::parse(std::string const& query) {
                 */
             if((std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]) != nullptr))
             {
-                //wont reach this point
-                
                 auto lastOp = lastUsed.at(std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name);
-                
+             
                 if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp) != nullptr)
                 {
                     if(std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->tablename_left == std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i])->table_name)
                     {
-                        
                         std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->left = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
                     }
                     else
                     {
-                        
                         std::dynamic_pointer_cast<AlgebraOperator::HashJoin>(lastOp)->right = std::dynamic_pointer_cast<AlgebraOperator::TableScan>(this->stack[i]);
                     }
                 }
@@ -266,6 +260,7 @@ std::string QueryParser::parse(std::string const& query) {
     }
    }
   std::stringstream os;
+  
   this->stack[0]->setParent(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr));
    this->stack[0]->produce(std::shared_ptr<AlgebraOperator::AlgebraOperator>(nullptr), os);
    
@@ -432,11 +427,9 @@ void QueryParser::nextToken(unsigned line, const std::string& token, SQL::Schema
                 {
                     auto table_n1 = this->tables[i];
                     auto table_n2 = this->tables[i+1];
-                    
-                    if(table_n1 < table_n2)
+//std::cout << "Created HashJoin left = " << table_n1 << ", right = " << table_n2 << std::endl;
+                   // if(table_n1 < table_n2)
                         this->stack.push_back(std::make_shared<AlgebraOperator::HashJoin>(table_n1, table_n2));
-                    else
-                        this->stack.push_back(std::make_shared<AlgebraOperator::HashJoin>(table_n2, table_n1));
                     
                                         
                     if(table_n1 < table_n2)

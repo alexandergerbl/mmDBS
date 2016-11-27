@@ -28,7 +28,7 @@ void task5(DatabaseColumn& db)
     while(1)
     {
         //1. Read query from console
-        std::string tmp_query;// = "select c_last, o_id, ol_dist_info from customer, order, orderline where c_id = o_c_id and o_id = ol_o_id and ol_d_id = o_d_id and o_w_id = ol_w_id and ol_number = 1 and ol_o_id = 100;";
+        std::string tmp_query;// = "select c_last, o_id, i_id, ol_dist_info from customer, order, orderline, item where c_id = o_c_id and c_d_id = o_d_id and c_w_id = o_w_id and o_id = ol_o_id and ol_d_id = o_d_id and o_w_id = ol_w_id and ol_number = 1 and ol_o_id = 100 and ol_i_id = i_id;";
         std::cout << "Enter Query:" << std::endl;
         
         std::getline(std::cin, tmp_query);
@@ -56,7 +56,8 @@ void task5(DatabaseColumn& db)
         
         auto start = std::chrono::system_clock::now();
         //4. compile *.so-file
-        system("g++ -O3 -fPIC -std=c++14 -g tmp.cpp -shared -o tmp.so -lstdc++fs");
+        int status = system("g++ -O3 -fPIC -std=c++14 -g tmp.cpp -shared -o tmp.so -lstdc++fs");
+        
         
         auto end = std::chrono::system_clock::now();
         auto compileTime = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
